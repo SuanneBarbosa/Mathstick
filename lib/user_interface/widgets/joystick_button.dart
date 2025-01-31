@@ -7,12 +7,12 @@ class JoystickButton extends StatelessWidget {
   final String semanticsLabel;
 
   const JoystickButton({
-    Key? key,
+    super.key,
     required this.icon,
     required this.onPressed,
     required this.tooltip,
     required this.semanticsLabel,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

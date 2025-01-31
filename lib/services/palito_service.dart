@@ -4,8 +4,13 @@ class Palito {
   final Offset position; // Posição do palito na tela
   final String type; // Tipo do palito (diagonal, horizontal, vertical)
   final String semanticsLabel;
+  final double size;
 
-  Palito({required this.position, required this.type, required this.semanticsLabel});
+  Palito(
+      {required this.position,
+      required this.type,
+      required this.semanticsLabel,
+      required this.size,});
 }
 
 class PalitoController extends ChangeNotifier {
@@ -13,35 +18,23 @@ class PalitoController extends ChangeNotifier {
 
   List<Palito> get palitos => _palitos;
 
-  void addPalito(Offset position, String type, String semanticsLabel) {
-  const validTypes = ["palitov", "palitodd", "palitode", "palitoh"];
-  if (!validTypes.contains(type)) {
-    throw ArgumentError("Tipo de palito inválido: $type");
-  }
-  _palitos.add(Palito(position: position, type: type, semanticsLabel: semanticsLabel));
-  notifyListeners();
-}
-void removePalito(Palito palito) {
-  _palitos.remove(palito);
-  notifyListeners();
-}
-void clearPalitos() {
-  _palitos.clear();
-  notifyListeners();
-}
-
-
-void updatePalito(Palito oldPalito, Offset newPosition) {
-  final index = _palitos.indexOf(oldPalito);
-  if (index != -1) {
-    _palitos[index] = Palito(
-      position: newPosition,
-      type: oldPalito.type,
-      semanticsLabel: oldPalito.semanticsLabel,
-    );
+  void addPalito(Offset position, String type, String semanticsLabel, double size) {
+    const validTypes = ["palitov", "palitodd", "palitode", "palitoh"];
+    if (!validTypes.contains(type)) {
+      throw ArgumentError("Tipo de palito inválido: $type");
+    }
+    _palitos.add(
+        Palito(position: position, type: type, semanticsLabel: semanticsLabel, size: size,));
     notifyListeners();
   }
-}
 
+  void removePalito(Palito palito) {
+    _palitos.remove(palito);
+    notifyListeners();
+  }
 
+  void clearPalitos() {
+    _palitos.clear();
+    notifyListeners();
+  }
 }
