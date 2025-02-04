@@ -4,10 +4,12 @@ import '../../services/character_service.dart';
 import '../../services/palito_service.dart';
 import '../widgets/joystick_button.dart';
 import '../widgets/menu_button.dart';
-// import '../widgets/action_button.dart';
-// import '../../data/action.dart';
+import '../widgets/action_button.dart';
+import '../../data/story_action.dart';
 
 class Mathsticks extends StatefulWidget {
+  const Mathsticks({super.key});
+
   @override
   _MathsticksState createState() => _MathsticksState();
 }
@@ -16,17 +18,22 @@ class _MathsticksState extends State<Mathsticks> {
   bool _showJoystick = true;
   double _palitoSize = 70.0; // Tamanho inicial do palito
   Offset? _initialDragPosition;
-  List<Action> actions = []; // Lista para armazenar as ações
+  List<StoryAction> actions = []; // Lista para armazenar as ações
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final characterController =
-          Provider.of<CharacterController>(context, listen: false);
-      final screenWidth = MediaQuery.of(context).size.width;
-      final screenHeight = MediaQuery.of(context).size.height;
-      characterController.setScreenSize(screenWidth, screenHeight);
+      Future.delayed(Duration.zero, () {
+        final characterController =
+            Provider.of<CharacterController>(context, listen: false);
+        final screenWidth = MediaQuery.of(context).size.width;
+        final screenHeight = MediaQuery.of(context).size.height;
+
+        if (screenWidth > 1 && screenHeight > 1) {
+          characterController.setScreenSize(screenWidth, screenHeight);
+        }
+      });
     });
   }
 
@@ -38,16 +45,16 @@ class _MathsticksState extends State<Mathsticks> {
     });
   }
 
-  // void _executeActions() {
-  //   for (Action action in _actions) {
-  //     if (action.type == StoryActionType.move) {
-  //       _moveCharacter(action.direction!);
-  //     } else {
-  //       _addPalito(action);
-  //     }
-  //   }
-  //   _actions.clear(); // Limpa a lista de ações após a execução.
-  // }
+  void _executeActions() {
+    for (StoryAction action in actions) {
+      if (action.type == StoryActionType.move) {
+        _moveCharacter(action.direction!);
+      } else {
+        _addPalito(action);
+      }
+    }
+    actions.clear(); // Limpa a lista de ações após a execução.
+  }
 
   void _moveCharacter(String direction) {
     final characterController =
@@ -68,146 +75,184 @@ class _MathsticksState extends State<Mathsticks> {
     }
   }
 
-  // void _addPalito(Action action) {
-  //   final palitoController =
-  //       Provider.of<PalitoController>(context, listen: false);
-  //   final characterController =
-  //       Provider.of<CharacterController>(context, listen: false);
-  //   const double baseSize = 50;
-  //   const double baseOffsetX = 40; // Valor base para o offset X
-  //   const double baseOffsetY = -25; // Valor base para o offset Y
+  void _addPalito(StoryAction action) {
+    final palitoController =
+        Provider.of<PalitoController>(context, listen: false);
+    final characterController =
+        Provider.of<CharacterController>(context, listen: false);
 
-  //   final sizeDiff = action.size! - baseSize; // Diferença de tamanho
+    const double baseSize = 50;
+    double baseOffsetX = 0;
+    double baseOffsetY = 0;
 
-  //   double offsetX = 0, offsetY = 0;
-  //   if (action.palitoType == "palitov") {
-  //     offsetX = baseOffsetX - (sizeDiff / 10) * 5;
-  //     offsetY = baseOffsetY - (sizeDiff / 10) * 10;
-  //   } else if (action.palitoType == "palitoh") {
-  //     offsetY = baseOffsetY - (sizeDiff / 10) * 5;
-  //     offsetX = baseOffsetX + 25;
-  //   } else if (action.palitoType == "palitodd") {
-  //     offsetX = baseOffsetX + 12 - (sizeDiff / 10) * 3;
-  //     offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
-  //   } else {
-  //     offsetX = baseOffsetX - 13 - (sizeDiff / 10) * 6;
-  //     offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
-  //   }
+    // Defina os valores base de offset para cada tipo de palito
+    switch (action.palitoType) {
+      case "palitov":
+        baseOffsetX = 40;
+        baseOffsetY = -25;
+        break;
+      case "palitodd":
+        baseOffsetX = 52;
+        baseOffsetY = -25;
+        break;
+      case "palitode":
+        baseOffsetX = 27;
+        baseOffsetY = -25;
+        break;
+      case "palitoh":
+        baseOffsetX = 65;
+        baseOffsetY = -2;
+        break;
+      default:
+        baseOffsetX = 0;
+        baseOffsetY = 0;
+    }
 
-  //   final position = Offset(characterController.xPosition + offsetX,
-  //       characterController.yPosition + offsetY);
+    // Calcule as diferenças de tamanho
+    final sizeDiff = action.size! - baseSize;
 
-  //   palitoController.addPalito(
-  //       position, action.palitoType!, action.palitoType!, action.size!);
-  // }
+    // Ajuste os offsets com base no tipo de palito
+    double offsetX = 0, offsetY = 0;
+    if (action.palitoType == "palitov") {
+      offsetX = baseOffsetX - (sizeDiff / 10) * 5;
+      offsetY = baseOffsetY - (sizeDiff / 10) * 10;
+    } else if (action.palitoType == "palitoh") {
+      offsetY = baseOffsetY - (sizeDiff / 10) * 5;
+      offsetX = baseOffsetX;
+    } else if (action.palitoType == "palitodd") {
+      offsetX = baseOffsetX - (sizeDiff / 10) * 3;
+      offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
+    } else if (action.palitoType == "palitode") {
+      offsetX = baseOffsetX - (sizeDiff / 10) * 6;
+      offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
+    }
 
-  // void _showCreateStoryModal(BuildContext context) {
-    
+    // Calcule a posição final
+    final position = Offset(
+      characterController.xPosition + offsetX,
+      characterController.yPosition + offsetY,
+    );
 
-  //   showDialog(
-  //     context: context,
-  //     builder: (BuildContext context) {
-  //       return AlertDialog(
-  //         title: Text("Criar História"),
-  //         content: StatefulBuilder(
-  //           // Usando StatefulBuilder para gerenciar o estado interno do modal
-  //           builder: (context, setState) {
-  //             return SingleChildScrollView(
-  //               // Para rolagem se a lista de ações ficar grande
-  //               child: Column(
-  //                 mainAxisSize: MainAxisSize.min,
-  //                 children: [
-  //                   Row(
-  //                     mainAxisAlignment: MainAxisAlignment.spaceAround,
-  //                     children: [
-  //                       ActionButton(
-  //                           onActionAdded: (action) => setState(() {
-  //                                 _actions.add(action);
-  //                               }),
-  //                           type: StoryActionType.move,
-  //                           value: 'Cima'),
-  //                       ActionButton(
-  //                           onActionAdded: (action) => setState(() {
-  //                                 _actions.add(action);
-  //                               }),
-  //                           type: StoryActionType.move,
-  //                           value: 'Baixo'),
-  //                       ActionButton(
-  //                           onActionAdded: (action) => setState(() {
-  //                                 _actions.add(action);
-  //                               }),
-  //                           type: StoryActionType.move,
-  //                           value: 'Esquerda'),
-  //                       ActionButton(
-  //                           onActionAdded: (action) => setState(() {
-  //                                 _actions.add(action);
-  //                               }),
-  //                           type: StoryActionType.move,
-  //                           value: 'Direita'),
-  //                     ],
-  //                   ),
+    // Adicione o palito na posição correta
+    palitoController.addPalito(
+      position,
+      action.palitoType!,
+      action.palitoType!,
+      action.size!,
+    );
+  }
 
-  //                   Wrap(
-  //                     alignment: WrapAlignment.center,
-  //                     children: [
-  //                       ActionButton(
-  //                         onActionAdded: (action) => setState(() {
-  //                           _actions.add(action);
-  //                         }),
-  //                         type: StoryActionType.palito,
-  //                         value: 'palitov',
-  //                         palitoSize: _palitoSize,
-  //                       ),
-  //                       ActionButton(
-  //                           onActionAdded: (action) => setState(() {
-  //                                 _actions.add(action);
-  //                               }),
-  //                           type: StoryActionType.palito,
-  //                           value: 'palitoh',
-  //                           palitoSize: _palitoSize),
-  //                       ActionButton(
-  //                           onActionAdded: (action) => setState(() {
-  //                                 _actions.add(action);
-  //                               }),
-  //                           type: StoryActionType.palito,
-  //                           value: 'palitodd',
-  //                           palitoSize: _palitoSize),
-  //                       ActionButton(
-  //                           onActionAdded: (action) => setState(() {
-  //                                 _actions.add(action);
-  //                               }),
-  //                           type: StoryActionType.palito,
-  //                           value: 'palitode',
-  //                           palitoSize: _palitoSize),
-  //                     ],
-  //                   ),
+  void _showCreateStoryModal(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Criar História"),
+          content: StatefulBuilder(
+            // Usando StatefulBuilder para gerenciar o estado interno do modal
+            builder: (context, setState) {
+              return SingleChildScrollView(
+                // Para rolagem se a lista de ações ficar grande
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        ActionButton(
+                            onActionAdded: (action) => setState(() {
+                                  actions.add(action);
+                                }),
+                            type: StoryActionType.move,
+                            value: 'Cima'),
+                        ActionButton(
+                            onActionAdded: (action) => setState(() {
+                                  actions.add(action);
+                                }),
+                            type: StoryActionType.move,
+                            value: 'Baixo'),
+                        ActionButton(
+                            onActionAdded: (action) => setState(() {
+                                  actions.add(action);
+                                }),
+                            type: StoryActionType.move,
+                            value: 'Esquerda'),
+                        ActionButton(
+                            onActionAdded: (action) => setState(() {
+                                  actions.add(action);
+                                }),
+                            type: StoryActionType.move,
+                            value: 'Direita'),
+                      ],
+                    ),
 
-  //                   // Lista de ações adicionadas
-  //                   ..._actions
-  //                       .map((action) =>
-  //                           ListTile(title: Text(action.toString())))
-  //                       .toList(),
-  //                   ElevatedButton(
-  //                     onPressed: () {
-  //                       // Executar as ações (veremos mais tarde)
-  //                       Navigator.of(context).pop(); // Fecha o modal
-  //                     },
-  //                     child: Text("Criar História"),
-  //                   ),
-  //                 ],
-  //               ),
-  //             );
-  //           },
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      children: [
+                        ActionButton(
+                          onActionAdded: (action) => setState(() {
+                            actions.add(action);
+                          }),
+                          type: StoryActionType.palito,
+                          value: 'palitov',
+                          palitoSize: _palitoSize,
+                        ),
+                        ActionButton(
+                            onActionAdded: (action) => setState(() {
+                                  actions.add(action);
+                                }),
+                            type: StoryActionType.palito,
+                            value: 'palitoh',
+                            palitoSize: _palitoSize),
+                        ActionButton(
+                            onActionAdded: (action) => setState(() {
+                                  actions.add(action);
+                                }),
+                            type: StoryActionType.palito,
+                            value: 'palitodd',
+                            palitoSize: _palitoSize),
+                        ActionButton(
+                            onActionAdded: (action) => setState(() {
+                                  actions.add(action);
+                                }),
+                            type: StoryActionType.palito,
+                            value: 'palitode',
+                            palitoSize: _palitoSize),
+                      ],
+                    ),
+
+                    // Lista de ações adicionadas
+                    ...actions.map(
+                        (action) => ListTile(title: Text(action.toString()))),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Executar as ações (veremos mais tarde)
+                        print(
+                            "Executando as ações..."); // Adicionado para debug
+                        _executeActions(); // Chamando o método para executar as ações
+                        Navigator.of(context).pop(); // Fecha o modal
+                      },
+                      child: const Text("Criar História"),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
+
+    if (screenWidth <= 1 || screenHeight <= 1) {
+      return const Center(
+          child: CircularProgressIndicator()); // Espera até ter valores válidos
+    }
 
     final controller = Provider.of<CharacterController>(context, listen: false);
     final palitoController =
@@ -231,7 +276,7 @@ class _MathsticksState extends State<Mathsticks> {
               ),
             ),
             SwitchListTile(
-              title: Text("Mostrar Joystick"),
+              title: const Text("Mostrar Joystick"),
               value: _showJoystick,
               onChanged: (bool value) {
                 setState(() {
@@ -244,14 +289,14 @@ class _MathsticksState extends State<Mathsticks> {
               ),
             ),
             ListTile(
-              title: Text("Limpar Tela"),
-              leading: Icon(Icons.delete, color: Colors.red),
+              title: const Text("Limpar Tela"),
+              leading: const Icon(Icons.delete, color: Colors.red),
               onTap: () {
                 showDialog(
                   context: context,
                   builder: (BuildContext context) {
                     return AlertDialog(
-                      title: Text("Limpar Tela"),
+                      title: const Text("Limpar Tela"),
                       content: const Text(
                           "Tem certeza que deseja remover todos os palitos?"),
                       actions: [
@@ -259,14 +304,14 @@ class _MathsticksState extends State<Mathsticks> {
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
-                          child: Text("Cancelar"),
+                          child: const Text("Cancelar"),
                         ),
                         TextButton(
                           onPressed: () {
                             palitoController.clearPalitos();
                             Navigator.of(context).pop();
                           },
-                          child: Text("Limpar"),
+                          child: const Text("Limpar"),
                         ),
                       ],
                     );
@@ -275,7 +320,7 @@ class _MathsticksState extends State<Mathsticks> {
               },
             ),
             ListTile(
-              title: Text("Tamanho do Palito"),
+              title: const Text("Tamanho do Palito"),
               subtitle: Consumer<CharacterController>(
                 builder: (context, characterController, child) {
                   return Slider(
@@ -294,15 +339,15 @@ class _MathsticksState extends State<Mathsticks> {
                 },
               ),
             ),
-            // ListTile(
-            //   title: Text("Criar História"),
-            //   leading:
-            //       Icon(Icons.history_edu, color: Colors.blue), // Ícone adequado
-            //   onTap: () {
-            //     _showCreateStoryModal(
-            //         context); // Chama a função para abrir o modal
-            //   },
-            // )
+            ListTile(
+              title: const Text("Criar História"),
+              leading: const Icon(Icons.history_edu,
+                  color: Colors.blue), // Ícone adequado
+              onTap: () {
+                _showCreateStoryModal(
+                    context); // Chama a função para abrir o modal
+              },
+            )
           ],
         ),
       ),
@@ -319,7 +364,7 @@ class _MathsticksState extends State<Mathsticks> {
                   Builder(
                     builder: (context) {
                       return IconButton(
-                        icon: Icon(Icons.menu, color: Colors.blue),
+                        icon: const Icon(Icons.menu, color: Colors.blue),
                         tooltip: "Abrir menu",
                         onPressed: () {
                           Scaffold.of(context).openDrawer();
@@ -419,16 +464,16 @@ class _MathsticksState extends State<Mathsticks> {
                                   context: context,
                                   builder: (context) {
                                     return AlertDialog(
-                                      title: Text("Contador de Palitos"),
+                                      title: const Text("Contador de Palitos"),
                                       content: Text(
                                         "Há ${palitoController.palitos.length} palitos na tela.",
-                                        style: TextStyle(fontSize: 18),
+                                        style: const TextStyle(fontSize: 18),
                                       ),
                                       actions: [
                                         TextButton(
                                           onPressed: () =>
                                               Navigator.of(context).pop(),
-                                          child: Text("OK"),
+                                          child: const Text("OK"),
                                         ),
                                       ],
                                     );
@@ -472,15 +517,15 @@ class _MathsticksState extends State<Mathsticks> {
                                     context: context,
                                     builder: (BuildContext context) {
                                       return AlertDialog(
-                                        title: Text("Remover Palito"),
-                                        content:
-                                            Text("Deseja remover este palito?"),
+                                        title: const Text("Remover Palito"),
+                                        content: const Text(
+                                            "Deseja remover este palito?"),
                                         actions: [
                                           TextButton(
                                             onPressed: () {
                                               Navigator.of(context).pop();
                                             },
-                                            child: Text("Cancelar"),
+                                            child: const Text("Cancelar"),
                                           ),
                                           TextButton(
                                             onPressed: () {
@@ -488,7 +533,7 @@ class _MathsticksState extends State<Mathsticks> {
                                                   .removePalito(palito);
                                               Navigator.of(context).pop();
                                             },
-                                            child: Text("Remover"),
+                                            child: const Text("Remover"),
                                           ),
                                         ],
                                       );

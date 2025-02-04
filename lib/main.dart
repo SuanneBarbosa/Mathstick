@@ -15,7 +15,7 @@ void main() {
   ]);
 
 
-  runApp(Main());
+  runApp(const Main());
 }
 
 class Main extends StatelessWidget {
@@ -28,7 +28,7 @@ class Main extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CharacterController()),
         ChangeNotifierProvider(create: (_) => PalitoController()), // Adiciona o PalitoController
       ],
-      child: MaterialApp(
+      child: const MaterialApp(
         title: 'Mathsticks',
         home: Mathsticks(),
       ),
