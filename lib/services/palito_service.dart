@@ -1,17 +1,38 @@
 import 'package:flutter/material.dart';
 
 class Palito {
-  final Offset position; // Posição do palito na tela
-  final String type; // Tipo do palito (diagonal, horizontal, vertical)
+  final Offset position;
+  final String type;
   final String semanticsLabel;
   final double size;
 
-  Palito(
-      {required this.position,
-      required this.type,
-      required this.semanticsLabel,
-      required this.size,});
+  Palito({
+    required this.position,
+    required this.type,
+    required this.semanticsLabel,
+    required this.size,
+  });
+
+  Offset getWrappedPosition(double screenWidth, double screenHeight) {
+    double x = position.dx;
+    double y = position.dy;
+
+    if (x < -size) {
+      x += screenWidth + size;
+    } else if (x > screenWidth) {
+      x -= screenWidth + size;
+    }
+
+    if (y < -size) {
+      y += screenHeight + size;
+    } else if (y > screenHeight) {
+      y -= screenHeight + size;
+    }
+
+    return Offset(x, y);
+  }
 }
+
 
 class PalitoController extends ChangeNotifier {
   final List<Palito> _palitos = []; // Lista de palitos

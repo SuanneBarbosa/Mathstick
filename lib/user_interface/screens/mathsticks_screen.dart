@@ -6,6 +6,8 @@ import '../widgets/joystick_button.dart';
 import '../widgets/menu_button.dart';
 import '../widgets/action_button.dart';
 import '../../data/story_action.dart';
+import '../../services/audio_service.dart';
+
 
 class Mathsticks extends StatefulWidget {
   const Mathsticks({super.key});
@@ -19,6 +21,16 @@ class _MathsticksState extends State<Mathsticks> {
   double _palitoSize = 70.0; // Tamanho inicial do palito
   Offset? _initialDragPosition;
   List<StoryAction> actions = []; // Lista para armazenar as ações
+  final AudioService _audioService =
+      AudioService(); // Instância do serviço de áudio
+  int _repeatCount = 1; // Valor padrão: 1 vez
+  double _narrationSpeed = 1.0; // Velocidade da narração
+
+  @override
+  void dispose() {
+    _audioService.dispose(); // Libera o player quando o widget for descartado
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -45,37 +57,46 @@ class _MathsticksState extends State<Mathsticks> {
     });
   }
 
-  void _executeActions() {
-    for (StoryAction action in actions) {
-      if (action.type == StoryActionType.move) {
-        _moveCharacter(action.direction!);
-      } else {
-        _addPalito(action);
+   Future<void> _executeActions(int repeatCount) async {
+    for (int i = 0; i < repeatCount; i++) {
+      print("Repetição ${i + 1} de $repeatCount");
+
+      for (StoryAction action in actions) {
+        if (action.type == StoryActionType.move) {
+          await _moveCharacter(action.direction!);
+        } else {
+          await _addPalito(action);
+        }
+        await Future.delayed(
+            const Duration(milliseconds: 1600)); // Pequeno delay entre ações
       }
     }
-    actions.clear(); // Limpa a lista de ações após a execução.
   }
 
-  void _moveCharacter(String direction) {
+  Future<void> _moveCharacter(String direction) async {
     final characterController =
         Provider.of<CharacterController>(context, listen: false);
     switch (direction) {
       case 'Cima':
         characterController.moveUp();
+        await _audioService.playAudio('assets/sounds/cima.mp3', speed: _narrationSpeed);
         break;
       case 'Baixo':
         characterController.moveDown();
+        await _audioService.playAudio('assets/sounds/baixo.mp3', speed: _narrationSpeed);
         break;
       case 'Esquerda':
         characterController.moveLeft();
+        await _audioService.playAudio('assets/sounds/esquerda.mp3', speed: _narrationSpeed);
         break;
       case 'Direita':
         characterController.moveRight();
+        await _audioService.playAudio('assets/sounds/direita.mp3', speed: _narrationSpeed);
         break;
     }
   }
 
-  void _addPalito(StoryAction action) {
+  Future<void> _addPalito(StoryAction action) async {
     final palitoController =
         Provider.of<PalitoController>(context, listen: false);
     final characterController =
@@ -90,18 +111,24 @@ class _MathsticksState extends State<Mathsticks> {
       case "palitov":
         baseOffsetX = 40;
         baseOffsetY = -25;
+        await _audioService.playAudio('assets/sounds/palitoVertical.mp3', speed: _narrationSpeed);
         break;
       case "palitodd":
         baseOffsetX = 52;
         baseOffsetY = -25;
+        await _audioService
+            .playAudio('assets/sounds/palitoDiagonalDireita.mp3', speed: _narrationSpeed);
         break;
       case "palitode":
         baseOffsetX = 27;
         baseOffsetY = -25;
+        await _audioService
+            .playAudio('assets/sounds/palitoDiagonalEsquerda.mp3', speed: _narrationSpeed);
         break;
       case "palitoh":
         baseOffsetX = 65;
         baseOffsetY = -2;
+        await _audioService.playAudio('assets/sounds/palitoHorizontal.mp3', speed: _narrationSpeed);
         break;
       default:
         baseOffsetX = 0;
@@ -142,12 +169,29 @@ class _MathsticksState extends State<Mathsticks> {
     );
   }
 
+
+  String _getPalitoAudioFile(String palitoType) {  //Função auxiliar para nome do arquivo
+    switch (palitoType) {
+      case "palitov":
+        return "palitoVertical";
+      case "palitodd":
+        return "palitoDiagonalDireita";
+      case "palitode":
+        return "palitoDiagonalEsquerda";
+      case "palitoh":
+        return "palitoHorizontal";
+      default:
+        return ""; // Ou algum áudio padrão
+    }
+  }
+
   void _showCreateStoryModal(BuildContext context) {
     showDialog(
       context: context,
+      barrierColor: Colors.transparent,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text("Criar História"),
+          title: const Text("História"),
           content: StatefulBuilder(
             // Usando StatefulBuilder para gerenciar o estado interno do modal
             builder: (context, setState) {
@@ -160,29 +204,45 @@ class _MathsticksState extends State<Mathsticks> {
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         ActionButton(
-                            onActionAdded: (action) => setState(() {
-                                  actions.add(action);
-                                }),
-                            type: StoryActionType.move,
-                            value: 'Cima'),
+                          onActionAdded: (action) {
+                            setState(() {
+                              actions.add(action);
+                              _moveCharacter(action.direction!);
+                            });
+                          },
+                          type: StoryActionType.move,
+                          value: 'Cima',
+                        ),
                         ActionButton(
-                            onActionAdded: (action) => setState(() {
-                                  actions.add(action);
-                                }),
-                            type: StoryActionType.move,
-                            value: 'Baixo'),
+                          onActionAdded: (action) {
+                            setState(() {
+                              actions.add(action);
+                              _moveCharacter(action.direction!);
+                            });
+                          },
+                          type: StoryActionType.move,
+                          value: 'Baixo',
+                        ),
                         ActionButton(
-                            onActionAdded: (action) => setState(() {
-                                  actions.add(action);
-                                }),
-                            type: StoryActionType.move,
-                            value: 'Esquerda'),
+                          onActionAdded: (action) {
+                            setState(() {
+                              actions.add(action);
+                              _moveCharacter(action.direction!);
+                            });
+                          },
+                          type: StoryActionType.move,
+                          value: 'Esquerda',
+                        ),
                         ActionButton(
-                            onActionAdded: (action) => setState(() {
-                                  actions.add(action);
-                                }),
-                            type: StoryActionType.move,
-                            value: 'Direita'),
+                          onActionAdded: (action) {
+                            setState(() {
+                              actions.add(action);
+                              _moveCharacter(action.direction!);
+                            });
+                          },
+                          type: StoryActionType.move,
+                          value: 'Direita',
+                        ),
                       ],
                     ),
 
@@ -190,50 +250,142 @@ class _MathsticksState extends State<Mathsticks> {
                       alignment: WrapAlignment.center,
                       children: [
                         ActionButton(
-                          onActionAdded: (action) => setState(() {
-                            actions.add(action);
-                          }),
+                          onActionAdded: (action) {
+                            setState(() {
+                              actions.add(action);
+                              _addPalito(action);
+                            });
+                          },
                           type: StoryActionType.palito,
                           value: 'palitov',
                           palitoSize: _palitoSize,
                         ),
                         ActionButton(
-                            onActionAdded: (action) => setState(() {
-                                  actions.add(action);
-                                }),
-                            type: StoryActionType.palito,
-                            value: 'palitoh',
-                            palitoSize: _palitoSize),
+                          onActionAdded: (action) {
+                            setState(() {
+                              actions.add(action);
+                              _addPalito(action);
+                            });
+                          },
+                          type: StoryActionType.palito,
+                          value: 'palitoh',
+                          palitoSize: _palitoSize,
+                        ),
                         ActionButton(
-                            onActionAdded: (action) => setState(() {
-                                  actions.add(action);
-                                }),
-                            type: StoryActionType.palito,
-                            value: 'palitodd',
-                            palitoSize: _palitoSize),
+                          onActionAdded: (action) {
+                            setState(() {
+                              actions.add(action);
+                              _addPalito(action);
+                            });
+                          },
+                          type: StoryActionType.palito,
+                          value: 'palitodd',
+                          palitoSize: _palitoSize,
+                        ),
                         ActionButton(
-                            onActionAdded: (action) => setState(() {
-                                  actions.add(action);
-                                }),
-                            type: StoryActionType.palito,
-                            value: 'palitode',
-                            palitoSize: _palitoSize),
+                          onActionAdded: (action) {
+                            setState(() {
+                              actions.add(action);
+                              _addPalito(action);
+                            });
+                          },
+                          type: StoryActionType.palito,
+                          value: 'palitode',
+                          palitoSize: _palitoSize,
+                        ),
                       ],
                     ),
 
                     // Lista de ações adicionadas
-                    ...actions.map(
-                        (action) => ListTile(title: Text(action.toString()))),
-                    ElevatedButton(
-                      onPressed: () {
-                        // Executar as ações (veremos mais tarde)
-                        print(
-                            "Executando as ações..."); // Adicionado para debug
-                        _executeActions(); // Chamando o método para executar as ações
-                        Navigator.of(context).pop(); // Fecha o modal
+                    ...actions.asMap().entries.map(
+                      (entry) {
+                        final index = entry.key;
+                        final action = entry.value;
+
+                        return ListTile(
+                          title: Text(action.toString()),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Botão para mover para cima
+                              IconButton(
+                                icon: const Icon(Icons.arrow_upward,
+                                    color: Colors.blue),
+                                onPressed: index > 0
+                                    ? () {
+                                        setState(() {
+                                          final temp = actions[index];
+                                          actions[index] = actions[index - 1];
+                                          actions[index - 1] = temp;
+                                        });
+                                      }
+                                    : null, // Desativa se for o primeiro item
+                              ),
+                              // Botão para mover para baixo
+                              IconButton(
+                                icon: const Icon(Icons.arrow_downward,
+                                    color: Colors.blue),
+                                onPressed: index < actions.length - 1
+                                    ? () {
+                                        setState(() {
+                                          final temp = actions[index];
+                                          actions[index] = actions[index + 1];
+                                          actions[index + 1] = temp;
+                                        });
+                                      }
+                                    : null, // Desativa se for o último item
+                              ),
+                              // Botão para excluir ação
+                              IconButton(
+                                icon:
+                                    const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {
+                                  setState(() {
+                                    actions.removeAt(index);
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        );
                       },
-                      child: const Text("Criar História"),
                     ),
+
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          actions.clear(); // Limpa a lista de ações
+                        });
+                      },
+                      child: const Text(
+                        "Limpar Ações",
+                        style: TextStyle(
+                            color: Colors
+                                .red), // Deixa o botão vermelho para destacar
+                      ),
+                    ),
+
+                    TextField(
+                    decoration: const InputDecoration(
+                      labelText: "Repetições (n)",
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      setState(() {
+                        _repeatCount = int.tryParse(value) ?? 1;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 10),
+
+                     ElevatedButton(
+                    onPressed: () {
+                      print("Executando história $_repeatCount vezes...");
+                      _executeActions(_repeatCount); // Chamar com repetição
+                    },
+                    child: const Text("Criar História"),
+                  ),
                   ],
                 ),
               );
@@ -339,6 +491,22 @@ class _MathsticksState extends State<Mathsticks> {
                 },
               ),
             ),
+             ListTile(
+          title: const Text("Velocidade da Narração"),
+          subtitle: Slider(
+            value: _narrationSpeed,
+            min: 0.7,
+            max: 2.0,
+            divisions: 8,
+            label: _narrationSpeed.toStringAsFixed(1),
+            onChanged: (double value) {
+              setState(() {
+                _narrationSpeed = value;
+                _audioService.setSpeed(_narrationSpeed); // Atualiza a velocidade no AudioService
+              });
+            },
+          ),
+        ),
             ListTile(
               title: const Text("Criar História"),
               leading: const Icon(Icons.history_edu,
@@ -508,9 +676,11 @@ class _MathsticksState extends State<Mathsticks> {
                       builder: (context, palitoController, child) {
                         return Stack(
                           children: palitoController.palitos.map((palito) {
+                            final wrappedPosition = palito.getWrappedPosition(
+                                screenWidth, screenHeight);
                             return Positioned(
-                              top: palito.position.dy,
-                              left: palito.position.dx,
+                              top: wrappedPosition.dy,
+                              left: wrappedPosition.dx,
                               child: GestureDetector(
                                 onTap: () {
                                   showDialog(

@@ -37,6 +37,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   provider: ^6.1.2
   flutter_joystick: ^0.2.1
+  audioplayers: ^5.2.1
+  just_audio: ^0.9.42
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -69,6 +72,14 @@ flutter:
     - assets/images/pularb.png
     - assets/images/ponto.png
     - assets/images/personagem.png
+    - assets/sounds/baixo.mp3
+    - assets/sounds/cima.mp3
+    - assets/sounds/direita.mp3
+    - assets/sounds/esquerda.mp3
+    - assets/sounds/palitoDiagonalDireita.mp3
+    - assets/sounds/palitoDiagonalEsquerda.mp3
+    - assets/sounds/palitoHorizontal.mp3
+    - assets/sounds/palitoVertical.mp3 
   fonts:
     - family: Poppins
       fonts:
