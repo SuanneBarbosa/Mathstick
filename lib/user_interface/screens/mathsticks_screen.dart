@@ -17,14 +17,14 @@ class Mathsticks extends StatefulWidget {
 
 class _MathsticksState extends State<Mathsticks> {
   bool _showJoystick = true;
-  double _palitoSize = 70.0; // Tamanho inicial do palito
+  double _palitoSize = 70.0; 
   Offset? _initialDragPosition;
-  List<StoryAction> actions = []; // Lista para armazenar as ações
+  List<StoryAction> actions = []; 
   final AudioService _audioService =
       AudioService(); // Instância do serviço de áudio
-  //int _repeatCount = 1; // Valor padrão: 1 vez
-  double _narrationSpeed = 1.0; // Velocidade da narração
-  bool _isNarrationEnabled = true; // Adiciona controle de narração
+  
+  double _narrationSpeed = 1.0; 
+  bool _isNarrationEnabled = true; 
 
   @override
   void dispose() {
@@ -91,7 +91,7 @@ class _MathsticksState extends State<Mathsticks> {
 
   static String _getActionLabel(String actionValue) {
     return _actionLabels[actionValue] ??
-        actionValue; // Retorna o nome amigável ou o valor original se não houver mapeamento
+        actionValue; 
   }
 
   Future<void> _moveCharacter(String direction) async {
@@ -587,7 +587,7 @@ class _MathsticksState extends State<Mathsticks> {
               },
             ),
             ListTile(
-              title: const Text("Tamanho do Palito"),
+              title: const Text(" do Palito"),
               subtitle: Consumer<CharacterController>(
                 builder: (context, characterController, child) {
                   return Slider(
@@ -623,21 +623,49 @@ class _MathsticksState extends State<Mathsticks> {
                 },
               ),
             ),
+
+            ListTile( // Contador de Palitos no Drawer
+        title: const Text("Contador de Palitos"),
+        trailing: _showCount
+            ? Container(
+                padding: const EdgeInsets.all(8),
+                color: Colors.orange[100],
+                child: Text(
+                  '$_palitoCount',
+                  style: const TextStyle(fontSize: 16),
+                ),
+              )
+            : null, // Mostra null se _showCount for false
+        onTap: () {
+          setState(() {
+            _palitoCount = palitoController.palitos.length;
+            _showCount = !_showCount;
+          });
+        },
+      ),
+      ListTile( // Criar História no Drawer
+        title: const Text("Criar História"),
+        onTap: () {
+          _showCreateStoryModal(context);
+        },
+      ),
           ],
         ),
       ),
       body: Container(
         width: screenWidth,
         height: screenHeight,
-        color: Colors.white,
+        color: const Color.fromRGBO(220, 247, 255, 1.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Menu de botões e menu lateral no topo
-            Container(
-              child: Row(
+            Expanded(
+                child: Stack(
+                  children: [
+                    Column(
                 children: [
+                  const SizedBox(height: 18),
                   Builder(
                     builder: (context) {
                       return IconButton(
@@ -649,156 +677,154 @@ class _MathsticksState extends State<Mathsticks> {
                       );
                     },
                   ),
-                  Expanded(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        MenuButton(
-                          iconPath: 'assets/images/palitov.png',
-                          label: "Palito V",
-                          tooltip: "Adicionar palito vertical",
-                          semanticsLabel: "Adicionar palito vertical",
-                          onTap: () {
-                            const double baseSize = 50;
-                            const double baseOffsetX = 40;
-                            const double baseOffsetY = -25;
-                            final sizeDiff = _palitoSize - baseSize;
-                            final offsetX = baseOffsetX - (sizeDiff / 10) * 5;
-                            final offsetY = baseOffsetY - (sizeDiff / 10) * 10;
-                            final position = Offset(
-                                controller.xPosition + offsetX,
-                                controller.yPosition + offsetY);
-                            palitoController.addPalito(position, "palitov",
-                                "Palito vertical", _palitoSize);
-                          },
-                        ),
-                        MenuButton(
-                          iconPath: 'assets/images/palitodd.png',
-                          label: "Palito DD",
-                          tooltip: "Adicionar palito diagonal à direita",
-                          semanticsLabel: "Adicionar palito diagonal à direita",
-                          onTap: () {
-                            const double baseSize = 50;
-                            const double baseOffsetX = 52;
-                            const double baseOffsetY = -25;
-
-                            final sizeDiff = _palitoSize - baseSize;
-                            final offsetX = baseOffsetX - (sizeDiff / 10) * 3;
-                            final offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
-
-                            final position = Offset(
-                                controller.xPosition + offsetX,
-                                controller.yPosition + offsetY);
-                            palitoController.addPalito(position, "palitodd",
-                                "Palito diagonal à direita", _palitoSize);
-                          },
-                        ),
-                        MenuButton(
-                          iconPath: 'assets/images/palitode.png',
-                          label: "Palito DE",
-                          tooltip: "Adicionar palito diagonal à esquerda",
-                          semanticsLabel:
-                              "Adicionar palito diagonal à esquerda",
-                          onTap: () {
-                            const double baseSize = 50;
-                            const double baseOffsetX = 27;
-                            const double baseOffsetY = -25;
-
-                            final sizeDiff = _palitoSize - baseSize;
-                            final offsetX = baseOffsetX - (sizeDiff / 10) * 6;
-                            final offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
-
-                            final position = Offset(
-                                controller.xPosition + offsetX,
-                                controller.yPosition + offsetY);
-                            palitoController.addPalito(position, "palitode",
-                                "Palito diagonal à esquerda", _palitoSize);
-                          },
-                        ),
-                        MenuButton(
-                          iconPath: 'assets/images/palitoh.png',
-                          label: "Palito H",
-                          tooltip: "Adicionar palito horizontal",
-                          semanticsLabel: "Adicionar palito horizontal",
-                          onTap: () {
-                            const double baseSize = 50;
-                            const double baseOffsetX = 65;
-                            const double baseOffsetY = -2;
-                            final sizeDiff = _palitoSize - baseSize;
-                            final offsetY = baseOffsetY - (sizeDiff / 10) * 5;
-                            final position = Offset(
-                                controller.xPosition + baseOffsetX,
-                                controller.yPosition + offsetY);
-                            palitoController.addPalito(position, "palitoh",
-                                "Palito horizontal", _palitoSize);
-                          },
-                        ),
-                        Consumer<PalitoController>(
-                          builder: (context, palitoController, child) {
-                            return Column(
-                              children: [
-                                if (_showCount) // Exibe a contagem apenas se _showCount for true
-                                  Container(
-                                    padding: EdgeInsets.all(8),
-                                    color: Colors.orange[100],
-                                    child: Text(
-                                      '$_palitoCount',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _palitoCount =
-                                          palitoController.palitos.length;
-                                      _showCount =
-                                          !_showCount; // Alterna a visibilidade
-                                    });
-                                  },
-                                  child: const Row(
-                                    children: [
-                                      // Icon(Icons.countertops),
-                                      SizedBox(width: 8),
-                                      Text("Quantidade"),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-                        const SizedBox(width: 10),
-                        ElevatedButton(
-                          onPressed: () {
-                            _showCreateStoryModal(context);
-                          },
-                          child: const Row(
-                            // Usar Row para ícone e texto
-                            mainAxisSize: MainAxisSize
-                                .min, // Ocupar apenas o espaço necessário
-                            children: [
-                              // Icon(Icons.history_edu,
-                              //     color: Colors.blue), // Ícone
-                              SizedBox(
-                                  width: 8), // Espaçamento entre ícone e texto
-                              Text("História"), // Texto
-                            ],
+                  Column(
+                    children: [
+                          MenuButton(
+                            iconPath: 'assets/images/palitov.png',
+                            label: "Palito V",
+                            tooltip: "Adicionar palito vertical",
+                            semanticsLabel: "Adicionar palito vertical",
+                            onTap: () {
+                              const double baseSize = 50;
+                              const double baseOffsetX = 40;
+                              const double baseOffsetY = -25;
+                              final sizeDiff = _palitoSize - baseSize;
+                              final offsetX = baseOffsetX - (sizeDiff / 10) * 5;
+                              final offsetY =
+                                  baseOffsetY - (sizeDiff / 10) * 10;
+                              final position = Offset(
+                                  controller.xPosition + offsetX,
+                                  controller.yPosition + offsetY);
+                              palitoController.addPalito(position, "palitov",
+                                  "Palito vertical", _palitoSize);
+                            },
                           ),
-                        ),
-                      ],
-                    ),
+                          MenuButton(
+                            iconPath: 'assets/images/palitodd.png',
+                            label: "Palito DD",
+                            tooltip: "Adicionar palito diagonal à direita",
+                            semanticsLabel:
+                                "Adicionar palito diagonal à direita",
+                            onTap: () {
+                              const double baseSize = 50;
+                              const double baseOffsetX = 52;
+                              const double baseOffsetY = -25;
+
+                              final sizeDiff = _palitoSize - baseSize;
+                              final offsetX = baseOffsetX - (sizeDiff / 10) * 3;
+                              final offsetY =
+                                  baseOffsetY - (sizeDiff / 10) * 9.5;
+
+                              final position = Offset(
+                                  controller.xPosition + offsetX,
+                                  controller.yPosition + offsetY);
+                              palitoController.addPalito(position, "palitodd",
+                                  "Palito diagonal à direita", _palitoSize);
+                            },
+                          ),
+                          MenuButton(
+                            iconPath: 'assets/images/palitode.png',
+                            label: "Palito DE",
+                            tooltip: "Adicionar palito diagonal à esquerda",
+                            semanticsLabel:
+                                "Adicionar palito diagonal à esquerda",
+                            onTap: () {
+                              const double baseSize = 50;
+                              const double baseOffsetX = 27;
+                              const double baseOffsetY = -25;
+
+                              final sizeDiff = _palitoSize - baseSize;
+                              final offsetX = baseOffsetX - (sizeDiff / 10) * 6;
+                              final offsetY =
+                                  baseOffsetY - (sizeDiff / 10) * 9.5;
+
+                              final position = Offset(
+                                  controller.xPosition + offsetX,
+                                  controller.yPosition + offsetY);
+                              palitoController.addPalito(position, "palitode",
+                                  "Palito diagonal à esquerda", _palitoSize);
+                            },
+                          ),
+                          MenuButton(
+                            iconPath: 'assets/images/palitoh.png',
+                            label: "Palito H",
+                            tooltip: "Adicionar palito horizontal",
+                            semanticsLabel: "Adicionar palito horizontal",
+                            onTap: () {
+                              const double baseSize = 50;
+                              const double baseOffsetX = 65;
+                              const double baseOffsetY = -2;
+                              final sizeDiff = _palitoSize - baseSize;
+                              final offsetY = baseOffsetY - (sizeDiff / 10) * 5;
+                              final position = Offset(
+                                  controller.xPosition + baseOffsetX,
+                                  controller.yPosition + offsetY);
+                              palitoController.addPalito(position, "palitoh",
+                                  "Palito horizontal", _palitoSize);
+                            },
+                          ),
+                      // Row(
+                      //   children: [
+                      //     Consumer<PalitoController>(
+                      //       builder: (context, palitoController, child) {
+                      //         return Column(
+                      //           children: [
+                      //             if (_showCount) // Exibe a contagem apenas se _showCount for true
+                      //               Container(
+                      //                 padding: EdgeInsets.all(8),
+                      //                 color: Colors.orange[100],
+                      //                 child: Text(
+                      //                   '$_palitoCount',
+                      //                   style: TextStyle(fontSize: 16),
+                      //                 ),
+                      //               ),
+                      //             ElevatedButton(
+                      //               onPressed: () {
+                      //                 setState(() {
+                      //                   _palitoCount =
+                      //                       palitoController.palitos.length;
+                      //                   _showCount =
+                      //                       !_showCount; // Alterna a visibilidade
+                      //                 });
+                      //               },
+                      //               child: const Row(
+                      //                 children: [
+                      //                   // Icon(Icons.countertops),
+                      //                   SizedBox(width: 8),
+                      //                   Text("Quantidade"),
+                      //                 ],
+                      //               ),
+                      //             ),
+                      //           ],
+                      //         );
+                      //       },
+                      //     ),
+                      //   ],
+                      // ),
+                      // const SizedBox(width: 10),
+                      // Row(
+                      //   children: [
+                      //     ElevatedButton(
+                      //       onPressed: () {
+                      //         _showCreateStoryModal(context);
+                      //       },
+                      //       child: const Row(
+                      //         mainAxisSize: MainAxisSize
+                      //             .min, 
+                      //         children: [
+                      //           SizedBox(
+                      //               width:
+                      //                   8), 
+                      //           Text("História"), 
+                      //         ],
+                      //       ),
+                      //     ),
+                      //   ],
+                      // )
+                    ],
                   ),
                 ],
               ),
-            ),
-            // Área de interação e movimentação
-            Expanded(
-              child: Container(
-                width: screenWidth,
-                height: screenHeight,
-                color: Colors.blue.withOpacity(0.1),
-                child: Stack(
-                  children: [
                     Consumer<PalitoController>(
                       builder: (context, palitoController, child) {
                         return Stack(
@@ -939,7 +965,7 @@ class _MathsticksState extends State<Mathsticks> {
                       ),
                   ],
                 ),
-              ),
+              
             ),
           ],
         ),
