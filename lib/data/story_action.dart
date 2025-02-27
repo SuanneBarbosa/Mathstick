@@ -1,5 +1,7 @@
 
 
+
+
 enum StoryActionType {
   move,
   palito,
@@ -10,15 +12,16 @@ class StoryAction {
   final String? direction; // Para movimentos
   final String? palitoType; // Para palitos
   final double? size;
+  final String Function(String) getActionLabel;
 
-  StoryAction({required this.type, this.direction, this.palitoType, this.size});
+  StoryAction({required this.type, this.direction, this.palitoType, this.size, required this.getActionLabel,});
 
   @override
   String toString() {
     if (type == StoryActionType.move) {
-      return 'Mover para $direction';
+       return getActionLabel(direction ?? ''); // Chame usando 
     } else {
-      return 'Palito $palitoType';
+       return getActionLabel(palitoType ?? '');
     }
   }
 }

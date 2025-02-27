@@ -6,13 +6,16 @@ class ActionButton extends StatelessWidget {
   final String value;
   final Function(StoryAction) onActionAdded; // Ajustar para StoryAction
   final double? palitoSize;
+  final String Function(String) getActionLabel;
 
   const ActionButton({
     super.key,
     required this.type,
     required this.value,
     required this.onActionAdded,
+    required this.getActionLabel,
     this.palitoSize,
+    
   });
 
   @override
@@ -30,6 +33,7 @@ class ActionButton extends StatelessWidget {
           direction: type == StoryActionType.move ? value : null,
           palitoType: type == StoryActionType.palito ? value : null,
           size: palitoSize,
+          getActionLabel: getActionLabel,
         );
         onActionAdded(newAction); 
       },
