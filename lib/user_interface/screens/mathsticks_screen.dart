@@ -260,8 +260,12 @@ class _MathsticksState extends State<Mathsticks> {
     );
   }
 
-  String? _selectedMoveAction; // Valor inicial do dropdown para movimentos
-  String? _selectedPalitoAction; // Valor inicial do dropdown para palitos
+  void _addAction(int setIndex, StoryAction action) {
+    setState(() {
+      actionSets[setIndex]['actions'].add(action);
+    });
+  }
+
   final ScrollController _scrollController = ScrollController();
   List<Map<String, dynamic>> actionSets = [
     {'n': 1, 'actions': <StoryAction>[]} // Conjunto inicial
@@ -282,9 +286,35 @@ class _MathsticksState extends State<Mathsticks> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Scrollbar(
-                      thumbVisibility: true,
-                      controller: _scrollController,
+                    // Scrollbar(
+                    //   thumbVisibility: true,
+                    //   controller: _scrollController,
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                    
+                      // Envolve o Switch e o Text em uma nova Row
+                      children: [
+                      
+                        
+                          IconButton(
+                            icon: const Icon(Icons.close, color: Colors.grey, size: 18,),
+                           onPressed: () => Navigator.pop(context),
+                          tooltip: "Fechar",
+                          
+                           
+                          ),
+                        
+                      ],
+                    ),
+
+                    Container(
+                      // Container para estilizar o SizedBox
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       child: SizedBox(
                         height: actions.length > 2 ? 100 : null,
                         child: SingleChildScrollView(
@@ -296,22 +326,32 @@ class _MathsticksState extends State<Mathsticks> {
                                 Column(
                                   children: [
                                     Row(
-                                      mainAxisSize: MainAxisSize.min,
+                                      // mainAxisSize: MainAxisSize.min,
                                       crossAxisAlignment:
                                           CrossAxisAlignment.center,
                                       children: [
-                                        Text('Conjunto de ações ${i + 1}:'),
-                                        // IconButton(
-                                        //   // Ícone de lixeira para excluir o conjunto
-                                        //   icon: const Icon(Icons.delete,
-                                        //       color: Colors.red),
-                                        //   onPressed: () {
-                                        //     setState(() {
-                                        //       actionSets.removeAt(i);
-                                        //     });
-                                        //   },
-                                        // ),
-
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            color: const Color.fromARGB(255, 67,
+                                                118, 255), // Cor de fundo
+                                            borderRadius: BorderRadius.circular(
+                                                8), // Define o raio das bordas
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
+                                          ),
+                                          child: Text(
+                                            'Ações ${i + 1}',
+                                            style: const TextStyle(
+                                              fontSize:
+                                                  16, // Aumenta o tamanho da fonte
+                                              color:
+                                                  Colors.white, // Cor da fonte
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 40),
                                         TextButton.icon(
                                           onPressed: () {
                                             setState(() {
@@ -331,13 +371,12 @@ class _MathsticksState extends State<Mathsticks> {
                                           style: TextButton.styleFrom(
                                             foregroundColor: Colors.red,
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 16, vertical: 8),
+                                                horizontal: 10, vertical: 8),
                                           ),
                                           icon:
                                               const Icon(Icons.delete_forever),
                                           label: const Text("Excluir"),
                                         ),
-
                                         TextButton.icon(
                                           onPressed: () {
                                             setState(() {
@@ -348,10 +387,11 @@ class _MathsticksState extends State<Mathsticks> {
                                             });
                                           },
                                           style: TextButton.styleFrom(
-                                            foregroundColor: Colors
-                                                .blue, // ou outra cor adequada
+                                            foregroundColor:
+                                                const Color.fromARGB(
+                                                    255, 67, 118, 255),
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 16, vertical: 8),
+                                                horizontal: 10, vertical: 8),
                                           ),
                                           icon: const Icon(Icons
                                               .add_circle_outline), // Ícone mais descritivo
@@ -362,7 +402,7 @@ class _MathsticksState extends State<Mathsticks> {
                                     const SizedBox(height: 10),
                                     Container(
                                       // Container para estilizar o SizedBox
-                                      padding: const EdgeInsets.all(16),
+                                      padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
                                         border: Border.all(color: Colors.grey),
                                         borderRadius: BorderRadius.circular(8),
@@ -432,76 +472,136 @@ class _MathsticksState extends State<Mathsticks> {
                                         ),
                                       ),
                                     ),
-                                    DropdownButton<DropdownOption>(
-                                      hint: const Text("Selecione uma ação"),
-                                      value:
-                                          _selectedAction, // Nova variável de estado
-                                      onChanged: (DropdownOption? newValue) {
-                                        setState(() {
-                                          _selectedAction = newValue;
+                                    const SizedBox(height: 10),
+                                    Row(
+                                      // Row para colocar o Dropdown e o "n = " lado a lado
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
 
-                                          if (newValue != null) {
-                                            if (newValue.type ==
-                                                StoryActionType.move) {
-                                              final newAction = StoryAction(
-                                                type: newValue.type,
-                                                direction: newValue.value,
-                                                getActionLabel: _getActionLabel,
-                                              );
-                                              actionSets.last['actions']
-                                                  .add(newAction);
-                                              _moveCharacter(newValue.value);
-                                            } else if (newValue.type ==
-                                                StoryActionType.palito) {
-                                              final newAction = StoryAction(
-                                                type: newValue.type,
-                                                palitoType: newValue.value,
-                                                size: _palitoSize,
-                                                getActionLabel: _getActionLabel,
-                                              );
-                                              actionSets.last['actions']
-                                                  .add(newAction);
-                                              _addPalito(newAction);
-                                            }
-                                          }
-                                        });
-                                      },
-                                      items: dropdownOptions
-                                          .map((DropdownOption option) {
-                                        return DropdownMenuItem<DropdownOption>(
-                                          value: option,
-                                          child: Text(option.label),
-                                        );
-                                      }).toList(),
-                                    ),
-                                    if (actionSets[i]['actions'].isNotEmpty)
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          const Text('n = '),
-                                          IconButton(
-                                            icon: const Icon(Icons.remove),
-                                            onPressed: () {
-                                              setState(() {
-                                                if (actionSets[i]['n'] > 0) {
-                                                  actionSets[i]['n']--;
+                                      children: [
+                                        SizedBox(
+                                          width: 150,
+                                          child: DropdownButton<DropdownOption>(
+                                            hint: const Text("Selecione ações"),
+                                            value: _selectedAction,
+                                            onChanged:
+                                                (DropdownOption? newValue) {
+                                              if (newValue != null) {
+                                                if (newValue.type ==
+                                                    StoryActionType.move) {
+                                                  final newAction = StoryAction(
+                                                    type: newValue.type,
+                                                    direction: newValue.value,
+                                                    getActionLabel:
+                                                        _getActionLabel,
+                                                  );
+                                                  _addAction(i,
+                                                      newAction); // Chama _addAction com o índice 'i'
+                                                  _moveCharacter(
+                                                      newValue.value);
+                                                } else if (newValue.type ==
+                                                    StoryActionType.palito) {
+                                                  final newAction = StoryAction(
+                                                    type: newValue.type,
+                                                    palitoType: newValue.value,
+                                                    size: _palitoSize,
+                                                    getActionLabel:
+                                                        _getActionLabel,
+                                                  );
+                                                  _addAction(i,
+                                                      newAction); // Chama _addAction com o índice 'i'
+                                                  _addPalito(
+                                                      newAction); // ou _addPalitoFromOption, se você a criou
                                                 }
-                                              });
+                                                setState(() {
+                                                  // Atualiza o estado para refletir a mudança
+                                                  _selectedAction = newValue;
+                                                });
+                                              }
                                             },
+                                            items: dropdownOptions
+                                                .map((DropdownOption option) {
+                                              return DropdownMenuItem<
+                                                  DropdownOption>(
+                                                value: option,
+                                                child: Text(option.label),
+                                              );
+                                            }).toList(),
                                           ),
-                                          Text('${actionSets[i]['n']}'),
-                                          IconButton(
-                                            icon: const Icon(Icons.add),
-                                            onPressed: () {
-                                              setState(() {
-                                                actionSets[i]['n']++;
-                                              });
-                                            },
-                                          ),
-                                        ],
-                                      ),
+                                        ),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                color: const Color.fromRGBO(
+                                                    84,
+                                                    173,
+                                                    255,
+                                                    1.0), // 1.0 é a opacidade (1.0 = totalmente opaco), // Cor de fundo
+                                                borderRadius: BorderRadius.circular(
+                                                    8), // Define o raio das bordas
+                                              ),
+                                              // padding:
+                                              //     const EdgeInsets.symmetric(
+                                              //   horizontal: 4,
+                                              //   vertical: 2,
+                                              // ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  const Text(
+                                                    '  n =',
+                                                    style: TextStyle(
+                                                      fontSize:
+                                                          18, // Aumenta o tamanho da fonte
+                                                      color: Colors
+                                                          .white, // Cor da fonte
+                                                    ),
+                                                  ),
+                                                  IconButton(
+                                                    iconSize:
+                                                        13, // Diminui o tamanho do ícone
+                                                    icon: const Icon(
+                                                        Icons.remove,
+                                                        color: Colors.white),
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        if (actionSets[i]['n'] >
+                                                            0) {
+                                                          actionSets[i]['n']--;
+                                                        }
+                                                      });
+                                                    },
+                                                  ),
+                                                  Text(
+                                                    '${actionSets[i]['n']}',
+                                                    style: const TextStyle(
+                                                      fontSize:
+                                                          13, // Ajuste o tamanho da fonte conforme necessário
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                  IconButton(
+                                                    iconSize:
+                                                        13, // Diminui o tamanho do ícone
+                                                    icon: const Icon(Icons.add,
+                                                        color: Colors.white),
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        actionSets[i]['n']++;
+                                                      });
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            )
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                     if (i <
                                         actionSets.length -
                                             1) // Adiciona o Divider
@@ -509,198 +609,23 @@ class _MathsticksState extends State<Mathsticks> {
                                         thickness: 2,
                                         color: Colors.grey,
                                       ),
-                                    const SizedBox(height: 10),
                                   ],
                                 ),
                               ],
-
-                              // const Divider(
-                              //   color: Colors.grey,
-                              //   thickness: 1,
-                              //   indent: 20,
-                              //   endIndent: 20,
-                              // ),
-
-                              // Row(
-                              //   mainAxisAlignment:
-                              //       MainAxisAlignment.spaceAround,
-                              //   children: [
-                              //     DropdownButton<DropdownOption>(
-                              //       hint: const Text("Selecione uma ação"),
-                              //       value:
-                              //           _selectedAction, // Nova variável de estado
-                              //       onChanged: (DropdownOption? newValue) {
-                              //         setState(() {
-                              //           _selectedAction = newValue;
-
-                              //           if (newValue != null) {
-                              //             if (newValue.type ==
-                              //                 StoryActionType.move) {
-                              //               final newAction = StoryAction(
-                              //                 type: newValue.type,
-                              //                 direction: newValue.value,
-                              //                 getActionLabel: _getActionLabel,
-                              //               );
-                              //               actionSets.last['actions']
-                              //                   .add(newAction);
-                              //               _moveCharacter(newValue.value);
-                              //             } else if (newValue.type ==
-                              //                 StoryActionType.palito) {
-                              //               final newAction = StoryAction(
-                              //                 type: newValue.type,
-                              //                 palitoType: newValue.value,
-                              //                 size: _palitoSize,
-                              //                 getActionLabel: _getActionLabel,
-                              //               );
-                              //               actionSets.last['actions']
-                              //                   .add(newAction);
-                              //               _addPalito(newAction);
-                              //             }
-                              //           }
-                              //         });
-                              //       },
-                              //       items: dropdownOptions
-                              //           .map((DropdownOption option) {
-                              //         return DropdownMenuItem<DropdownOption>(
-                              //           value: option,
-                              //           child: Text(option.label),
-                              //         );
-                              //       }).toList(),
-                              //     ),
-
-                              //     // DropdownButton<String>(
-                              //     //   value: _selectedMoveAction,
-                              //     //   hint: const Text("Movimentação"),
-                              //     //   onChanged: (String? newValue) {
-                              //     //     setState(() {
-                              //     //       _selectedMoveAction = newValue;
-                              //     //       if (newValue != null) {
-                              //     //         final newAction = StoryAction(
-                              //     //           type: StoryActionType.move,
-                              //     //           direction: newValue,
-                              //     //           getActionLabel: _getActionLabel,
-                              //     //         );
-
-                              //     //         actionSets.last['actions']
-                              //     //             .add(newAction);
-                              //     //         _moveCharacter(newValue);
-                              //     //       }
-                              //     //     });
-                              //     //   },
-                              //     //   items: <String?>[
-                              //     //     'Cima',
-                              //     //     'Baixo',
-                              //     //     'Esquerda',
-                              //     //     'Direita'
-                              //     //   ].map<DropdownMenuItem<String>>(
-                              //     //       (String? value) {
-                              //     //     return DropdownMenuItem<String>(
-                              //     //       value: value,
-                              //     //       child: Text(value != null
-                              //     //           ? _getActionLabel(value)
-                              //     //           : "Movimentação"),
-                              //     //     );
-                              //     //   }).toList(),
-                              //     // ),
-                              //     // const SizedBox(width: 20),
-                              //     // DropdownButton<String>(
-                              //     //   value: _selectedPalitoAction,
-                              //     //   hint: const Text("Palitos"),
-                              //     //   onChanged: (String? newValue) {
-                              //     //     setState(() {
-                              //     //       _selectedPalitoAction = newValue;
-                              //     //       if (newValue != null) {
-                              //     //         final newAction = StoryAction(
-                              //     //           type: StoryActionType.palito,
-                              //     //           palitoType: newValue,
-                              //     //           size: _palitoSize,
-                              //     //           getActionLabel: _getActionLabel,
-                              //     //         );
-                              //     //         // Adiciona a ação ao último conjunto
-                              //     //         actionSets.last['actions']
-                              //     //             .add(newAction);
-                              //     //         _addPalito(newAction);
-                              //     //       }
-                              //     //     });
-                              //     //   },
-                              //     //   items: <String?>[
-                              //     //     'palitov',
-                              //     //     'palitoh',
-                              //     //     'palitodd',
-                              //     //     'palitode'
-                              //     //   ].map<DropdownMenuItem<String>>(
-                              //     //       (String? value) {
-                              //     //     return DropdownMenuItem<String>(
-                              //     //       value: value,
-                              //     //       child: Text(value != null
-                              //     //           ? _getActionLabel(value)
-                              //     //           : "Palitos"),
-                              //     //     );
-                              //     //   }).toList(),
-                              //     // ),
-                              //   ],
-                              // ),
-
-                              // Row(
-                              //   mainAxisAlignment:
-                              //       MainAxisAlignment.spaceEvenly,
-                              //   children: [
-                              //     TextButton.icon(
-                              //       onPressed: () {
-                              //         setState(() {
-                              //           actionSets.add({
-                              //             'n': 1,
-                              //             'actions': <StoryAction>[]
-                              //           });
-                              //         });
-                              //       },
-                              //       style: TextButton.styleFrom(
-                              //         foregroundColor:
-                              //             Colors.blue, // ou outra cor adequada
-                              //         padding: const EdgeInsets.symmetric(
-                              //             horizontal: 16, vertical: 8),
-                              //       ),
-                              //       icon: const Icon(Icons
-                              //           .add_circle_outline), // Ícone mais descritivo
-                              //       label: const Text("Adicionar Conjunto"),
-                              //     ),
-                              //     TextButton.icon(
-                              //       onPressed: () {
-                              //         setState(() {
-                              //           actionSets = [
-                              //             {'n': 1, 'actions': <StoryAction>[]}
-                              //           ];
-                              //         });
-                              //       },
-                              //       style: TextButton.styleFrom(
-                              //         foregroundColor: Colors
-                              //             .red, // Define a cor do ícone e do texto
-                              //         padding: const EdgeInsets.symmetric(
-                              //             horizontal: 16,
-                              //             vertical:
-                              //                 8), // Ajuste o padding conforme necessário
-                              //       ),
-                              //       icon: const Icon(Icons.delete_forever),
-                              //       label: const Text("Excluir Conjunto"),
-                              //     )
-                              //   ],
-                              // ),
                             ],
                           ),
                         ),
                       ),
                     ),
-                    const Divider(
-                      color: Colors.grey,
-                      thickness: 1,
-                      indent: 20,
-                      endIndent: 20,
-                    ),
+
+                    const SizedBox(height: 10),
+
                     Row(
-                      mainAxisAlignment: MainAxisAlignment
-                          .spaceAround, // Distribui os itens na Row
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      // Distribui os itens na Row
                       children: [
                         Row(
+                          // mainAxisAlignment: MainAxisAlignment.end,
                           // Envolve o Switch e o Text em uma nova Row
                           children: [
                             const Text("Narração"),
@@ -719,12 +644,23 @@ class _MathsticksState extends State<Mathsticks> {
                             _executeActions();
                           },
                           style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                Colors.blue, // ou outra cor adequada
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 10),
+
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(
                                   8.0), // Define o raio do arredondamento
                             ),
                           ),
-                          child: const Text("Fazer História"),
+                          child: const Text(
+                            "Fazer História",
+                            style: TextStyle(
+                              fontSize: 16, // Aumenta o tamanho da fonte
+                              color: Colors.white, // Cor da fonte
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -957,10 +893,11 @@ class _MathsticksState extends State<Mathsticks> {
               trailing: _showCount
                   ? Container(
                       padding: const EdgeInsets.all(8),
-                      color: Colors.orange[100],
+                      color: const Color.fromARGB(255, 67, 118, 255),
                       child: Text(
                         '$_palitoCount',
-                        style: const TextStyle(fontSize: 16),
+                        style:
+                            const TextStyle(fontSize: 16, color: Colors.white),
                       ),
                     )
                   : null, // Mostra null se _showCount for false
