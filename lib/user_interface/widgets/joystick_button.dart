@@ -17,7 +17,7 @@ class JoystickButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
       final screenWidth = MediaQuery.of(context).size.width;
-       final double buttonSize = (screenWidth * 0.1).clamp(40.0, 80.0);
+       final double buttonSize = (screenWidth * 0.08).clamp(5.0, 80.0);
     return Semantics(
       label: semanticsLabel,
       button: true,

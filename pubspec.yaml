@@ -80,6 +80,10 @@ flutter:
     - assets/sounds/palitoDiagonalEsquerda.mp3
     - assets/sounds/palitoHorizontal.mp3
     - assets/sounds/palitoVertical.mp3 
+    - assets/images/IFSP_Logo.png
+    - assets/images/CNPQ_Logo.png
+    - assets/images/RUMO_Logo.png
+   
   fonts:
     - family: Poppins
       fonts:
