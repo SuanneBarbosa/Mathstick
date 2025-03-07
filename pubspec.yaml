@@ -62,10 +62,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/images/palitov.png
-    - assets/images/palitoh.png
-    - assets/images/palitodd.png
-    - assets/images/palitode.png
+    - assets/images/Palito V.png
+    - assets/images/Palito H.png
+    - assets/images/Palito DD.png
+    - assets/images/Palito DE.png
     - assets/images/pulare.png
     - assets/images/pulard.png
     - assets/images/pularc.png

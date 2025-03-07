@@ -36,10 +36,12 @@ class _MathsticksState extends State<Mathsticks> {
   double _narrationSpeed = 1.0;
   bool _isNarrationEnabled = false;
   DropdownOption? _selectedAction;
+  final ScrollController _drawerScrollController = ScrollController();
 
   @override
   void dispose() {
     _audioService.dispose(); // Libera o player quando o widget for descartado
+    _drawerScrollController.dispose();
     super.dispose();
   }
 
@@ -92,10 +94,10 @@ class _MathsticksState extends State<Mathsticks> {
   }
 
   static final Map<String, String> _actionLabels = {
-    'palitov': 'Palito V',
-    'palitoh': 'Palito H',
-    'palitodd': 'Palito DD',
-    'palitode': 'Palito DE',
+    'Palito V': 'Palito V',
+    'Palito H': 'Palito H',
+    'Palito DD': 'Palito DD',
+    'Palito DE': 'Palito DE',
     'Cima': 'Cima',
     'Baixo': 'Baixo',
     'Esquerda': 'Esquerda',
@@ -104,24 +106,38 @@ class _MathsticksState extends State<Mathsticks> {
 
   List<DropdownOption> dropdownOptions = [
     // Movimentos
-    DropdownOption(value: 'Cima', label: 'Cima', type: StoryActionType.move),
-    DropdownOption(value: 'Baixo', label: 'Baixo', type: StoryActionType.move),
     DropdownOption(
-        value: 'Esquerda', label: 'Esquerda', type: StoryActionType.move),
+        value: 'Cima', label: 'Saltar para Cima', type: StoryActionType.move),
     DropdownOption(
-        value: 'Direita', label: 'Direita', type: StoryActionType.move),
+        value: 'Baixo', label: 'Saltar para Baixo', type: StoryActionType.move),
+    DropdownOption(
+        value: 'Esquerda',
+        label: 'Saltar para Esquerda',
+        type: StoryActionType.move),
+    DropdownOption(
+        value: 'Direita',
+        label: 'Saltar para Direita',
+        type: StoryActionType.move),
 
     // Palitos (separe com um Divider, se desejar)
     // DropdownOption(value: '-', label: '-----', type: StoryActionType.none), // Opcional: separador visual
 
     DropdownOption(
-        value: 'palitov', label: 'Palito V', type: StoryActionType.palito),
+        value: 'Palito V',
+        label: 'Palito Vertical',
+        type: StoryActionType.palito),
     DropdownOption(
-        value: 'palitoh', label: 'Palito H', type: StoryActionType.palito),
+        value: 'Palito H',
+        label: 'Palito Horizontal',
+        type: StoryActionType.palito),
     DropdownOption(
-        value: 'palitodd', label: 'Palito DD', type: StoryActionType.palito),
+        value: 'Palito DD',
+        label: 'Palito Diagonal a Direita',
+        type: StoryActionType.palito),
     DropdownOption(
-        value: 'palitode', label: 'Palito DE', type: StoryActionType.palito),
+        value: 'Palito DE',
+        label: 'Palito Diagonal a Esquerda',
+        type: StoryActionType.palito),
   ];
 
   static String _getActionLabel(String actionValue) {
@@ -184,7 +200,7 @@ class _MathsticksState extends State<Mathsticks> {
     double baseOffsetY = 0;
 
     switch (action.palitoType) {
-      case "palitov":
+      case "Palito V":
         baseOffsetX = 40;
         baseOffsetY = -25;
         if (_isNarrationEnabled) {
@@ -194,7 +210,7 @@ class _MathsticksState extends State<Mathsticks> {
           );
         }
         break;
-      case "palitodd":
+      case "Palito DD":
         baseOffsetX = 52;
         baseOffsetY = -25;
         if (_isNarrationEnabled) {
@@ -204,7 +220,7 @@ class _MathsticksState extends State<Mathsticks> {
           );
         }
         break;
-      case "palitode":
+      case "Palito DE":
         baseOffsetX = 27;
         baseOffsetY = -25;
         if (_isNarrationEnabled) {
@@ -214,7 +230,7 @@ class _MathsticksState extends State<Mathsticks> {
           );
         }
         break;
-      case "palitoh":
+      case "Palito H":
         baseOffsetX = 65;
         baseOffsetY = -2;
         if (_isNarrationEnabled) {
@@ -232,16 +248,16 @@ class _MathsticksState extends State<Mathsticks> {
     final sizeDiff = action.size! - baseSize;
     double offsetX = 0, offsetY = 0;
 
-    if (action.palitoType == "palitov") {
+    if (action.palitoType == "Palito V") {
       offsetX = baseOffsetX - (sizeDiff / 10) * 5;
       offsetY = baseOffsetY - (sizeDiff / 10) * 10;
-    } else if (action.palitoType == "palitoh") {
+    } else if (action.palitoType == "Palito H") {
       offsetY = baseOffsetY - (sizeDiff / 10) * 5;
       offsetX = baseOffsetX;
-    } else if (action.palitoType == "palitodd") {
+    } else if (action.palitoType == "Palito DD") {
       offsetX = baseOffsetX - (sizeDiff / 10) * 3;
       offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
-    } else if (action.palitoType == "palitode") {
+    } else if (action.palitoType == "Palito DE") {
       offsetX = baseOffsetX - (sizeDiff / 10) * 6;
       offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
     }
@@ -292,19 +308,21 @@ class _MathsticksState extends State<Mathsticks> {
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
-                    
-                      // Envolve o Switch e o Text em uma nova Row
                       children: [
-                      
-                        
-                          IconButton(
-                            icon: const Icon(Icons.close, color: Colors.grey, size: 18,),
-                           onPressed: () => Navigator.pop(context),
-                          tooltip: "Fechar",
-                          
-                           
+                        Semantics(
+                          label: 'Fechar História',
+                          // button: true,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.grey,
+                              size: 18,
+                            ),
+                            onPressed: () => Navigator.pop(context),
+                            tooltip:
+                                "Fechar", // Mantém o tooltip para feedback visual
                           ),
-                        
+                        ),
                       ],
                     ),
 
@@ -352,50 +370,64 @@ class _MathsticksState extends State<Mathsticks> {
                                           ),
                                         ),
                                         const SizedBox(width: 40),
-                                        TextButton.icon(
-                                          onPressed: () {
-                                            setState(() {
-                                              actionSets.removeAt(
-                                                  i); // Remove o conjunto no índice 'i'
-                                              if (actionSets.isEmpty) {
-                                                // Redefine se for o último
-                                                actionSets = [
-                                                  {
-                                                    'n': 1,
-                                                    'actions': <StoryAction>[]
-                                                  }
-                                                ];
-                                              }
-                                            });
-                                          },
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.red,
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 10, vertical: 8),
-                                          ),
-                                          icon:
-                                              const Icon(Icons.delete_forever),
-                                          label: const Text("Excluir"),
-                                        ),
-                                        TextButton.icon(
-                                          onPressed: () {
-                                            setState(() {
-                                              actionSets.add({
-                                                'n': 1,
-                                                'actions': <StoryAction>[]
+                                        Semantics(
+                                          label:
+                                              'Excluir ações do conjunto ${i + 1}', // Label semântico claro e específico
+                                          button: true, // Indica que é um botão
+                                          child: TextButton.icon(
+                                            onPressed: () {
+                                              setState(() {
+                                                actionSets.removeAt(i);
+                                                if (actionSets.isEmpty) {
+                                                  actionSets = [
+                                                    {
+                                                      'n': 1,
+                                                      'actions': <StoryAction>[]
+                                                    }
+                                                  ];
+                                                }
                                               });
-                                            });
-                                          },
-                                          style: TextButton.styleFrom(
-                                            foregroundColor:
-                                                const Color.fromARGB(
-                                                    255, 67, 118, 255),
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 10, vertical: 8),
+                                            },
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: Colors.red,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 8),
+                                            ),
+                                            icon: const Icon(
+                                                Icons.delete_forever),
+                                            label: const Text(
+                                                "Excluir"), // Mantém o label visual
                                           ),
-                                          icon: const Icon(Icons
-                                              .add_circle_outline), // Ícone mais descritivo
-                                          label: const Text("Novo"),
+                                        ),
+                                        Semantics(
+                                          label:
+                                              'Adicione um novo conjunto de ações', // Label semântico claro
+                                          button: true, // Indica que é um botão
+                                          child: TextButton.icon(
+                                            onPressed: () {
+                                              setState(() {
+                                                actionSets.add({
+                                                  'n': 1,
+                                                  'actions': <StoryAction>[],
+                                                });
+                                              });
+                                            },
+                                            style: TextButton.styleFrom(
+                                              foregroundColor:
+                                                  const Color.fromARGB(
+                                                      255, 67, 118, 255),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 8),
+                                            ),
+                                            icon: const Icon(
+                                                Icons.add_circle_outline),
+                                            label: const Text(
+                                                "Novo"), // Mantém o label visual "Novo"
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -446,22 +478,27 @@ class _MathsticksState extends State<Mathsticks> {
                                                       mainAxisSize:
                                                           MainAxisSize.min,
                                                       children: [
-                                                        IconButton(
-                                                          icon: const Icon(
-                                                            IconData(0x2715,
-                                                                fontFamily:
-                                                                    'MaterialIcons'), // Caractere Unicode "x"
-                                                            color: Colors.black,
-                                                            size: 12,
+                                                        Semantics(
+                                                          label: 'Retirar ação',
+                                                          button: true,
+                                                          child: IconButton(
+                                                            icon: const Icon(
+                                                              IconData(0x2715,
+                                                                  fontFamily:
+                                                                      'MaterialIcons'),
+                                                              color:
+                                                                  Colors.black,
+                                                              size: 12,
+                                                            ),
+                                                            onPressed: () {
+                                                              setState(() {
+                                                                actionSets[i][
+                                                                        'actions']
+                                                                    .removeAt(
+                                                                        j);
+                                                              });
+                                                            },
                                                           ),
-                                                          onPressed: () {
-                                                            setState(() {
-                                                              actionSets[i][
-                                                                      'actions']
-                                                                  .removeAt(
-                                                                      j); // Remove apenas a ação
-                                                            });
-                                                          },
                                                         ),
                                                       ],
                                                     ),
@@ -524,7 +561,13 @@ class _MathsticksState extends State<Mathsticks> {
                                               return DropdownMenuItem<
                                                   DropdownOption>(
                                                 value: option,
-                                                child: Text(option.label),
+                                                child: Tooltip(
+                                                  message: option.label,
+                                                  child: Semantics(
+                                                    label: option.label,
+                                                    child: Text(option.value),
+                                                  ),
+                                                ),
                                               );
                                             }).toList(),
                                           ),
@@ -534,70 +577,145 @@ class _MathsticksState extends State<Mathsticks> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.center,
                                           children: [
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                color: const Color.fromRGBO(
-                                                    84,
-                                                    173,
-                                                    255,
-                                                    1.0), // 1.0 é a opacidade (1.0 = totalmente opaco), // Cor de fundo
-                                                borderRadius: BorderRadius.circular(
-                                                    8), // Define o raio das bordas
-                                              ),
-                                              // padding:
-                                              //     const EdgeInsets.symmetric(
-                                              //   horizontal: 4,
-                                              //   vertical: 2,
-                                              // ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  const Text(
-                                                    '  n =',
-                                                    style: TextStyle(
-                                                      fontSize:
-                                                          18, // Aumenta o tamanho da fonte
-                                                      color: Colors
-                                                          .white, // Cor da fonte
+                                            Semantics(
+                                              label:
+                                                  'Repetir ações ${i + 1}, ${actionSets[i]['n']} vezes. Use os botões mais e menos para ajustar o número de repetições.',
+                                              container:
+                                                  true, // Importante: adiciona container: true
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: const Color.fromRGBO(
+                                                      84, 173, 255, 1.0),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    const Text(
+                                                      '  n =',
+                                                      style: TextStyle(
+                                                          fontSize: 18,
+                                                          color: Colors.white),
                                                     ),
-                                                  ),
-                                                  IconButton(
-                                                    iconSize:
-                                                        13, // Diminui o tamanho do ícone
-                                                    icon: const Icon(
-                                                        Icons.remove,
-                                                        color: Colors.white),
-                                                    onPressed: () {
-                                                      setState(() {
-                                                        if (actionSets[i]['n'] >
-                                                            0) {
-                                                          actionSets[i]['n']--;
-                                                        }
-                                                      });
-                                                    },
-                                                  ),
-                                                  Text(
-                                                    '${actionSets[i]['n']}',
-                                                    style: const TextStyle(
-                                                      fontSize:
-                                                          13, // Ajuste o tamanho da fonte conforme necessário
-                                                      color: Colors.white,
+                                                    Semantics(
+                                                      label:
+                                                          'Diminuir repetições',
+                                                      button: true,
+                                                      child: IconButton(
+                                                        iconSize:
+                                                            13, // Diminui o tamanho do ícone
+                                                        icon: const Icon(
+                                                            Icons.remove,
+                                                            color:
+                                                                Colors.white),
+                                                        onPressed: () {
+                                                          setState(() {
+                                                            if (actionSets[i]
+                                                                    ['n'] >
+                                                                0) {
+                                                              actionSets[i]
+                                                                  ['n']--;
+                                                            }
+                                                          });
+                                                        },
+                                                      ),
                                                     ),
-                                                  ),
-                                                  IconButton(
-                                                    iconSize:
-                                                        13, // Diminui o tamanho do ícone
-                                                    icon: const Icon(Icons.add,
-                                                        color: Colors.white),
-                                                    onPressed: () {
-                                                      setState(() {
-                                                        actionSets[i]['n']++;
-                                                      });
-                                                    },
-                                                  ),
-                                                ],
+                                                    Text(
+                                                      '${actionSets[i]['n']}',
+                                                      style: const TextStyle(
+                                                          fontSize: 13,
+                                                          color: Colors.white),
+                                                    ),
+                                                    Semantics(
+                                                      label:
+                                                          'Aumentar repetições',
+                                                      button: true,
+                                                      child: IconButton(
+                                                        iconSize:
+                                                            13, // Diminui o tamanho do ícone
+
+                                                        icon: const Icon(
+                                                            Icons.add,
+                                                            color:
+                                                                Colors.white),
+                                                        onPressed: () {
+                                                          setState(() {
+                                                            actionSets[i]
+                                                                ['n']++;
+                                                          });
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
                                               ),
-                                            )
+                                            ),
+                                            // Container(
+                                            //   decoration: BoxDecoration(
+                                            //     color: const Color.fromRGBO(
+                                            //         84,
+                                            //         173,
+                                            //         255,
+                                            //         1.0), // 1.0 é a opacidade (1.0 = totalmente opaco), // Cor de fundo
+                                            //     borderRadius: BorderRadius.circular(
+                                            //         8), // Define o raio das bordas
+                                            //   ),
+                                            //   // padding:
+                                            //   //     const EdgeInsets.symmetric(
+                                            //   //   horizontal: 4,
+                                            //   //   vertical: 2,
+                                            //   // ),
+                                            //   child: Row(
+                                            //     mainAxisSize: MainAxisSize.min,
+                                            //     children: [
+                                            //       const Text(
+                                            //         '  n =',
+                                            //         style: TextStyle(
+                                            //           fontSize:
+                                            //               18, // Aumenta o tamanho da fonte
+                                            //           color: Colors
+                                            //               .white, // Cor da fonte
+                                            //         ),
+                                            //       ),
+                                            //       IconButton(
+                                            //         iconSize:
+                                            //             13, // Diminui o tamanho do ícone
+                                            //         icon: const Icon(
+                                            //             Icons.remove,
+                                            //             color: Colors.white),
+                                            //         onPressed: () {
+                                            //           setState(() {
+                                            //             if (actionSets[i]['n'] >
+                                            //                 0) {
+                                            //               actionSets[i]['n']--;
+                                            //             }
+                                            //           });
+                                            //         },
+                                            //       ),
+                                            //       Text(
+                                            //         '${actionSets[i]['n']}',
+                                            //         style: const TextStyle(
+                                            //           fontSize:
+                                            //               13, // Ajuste o tamanho da fonte conforme necessário
+                                            //           color: Colors.white,
+                                            //         ),
+                                            //       ),
+                                            //       IconButton(
+                                            //         iconSize:
+                                            //             13, // Diminui o tamanho do ícone
+                                            //         icon: const Icon(Icons.add,
+                                            //             color: Colors.white),
+                                            //         onPressed: () {
+                                            //           setState(() {
+                                            //             actionSets[i]['n']++;
+                                            //           });
+                                            //         },
+                                            //       ),
+                                            //     ],
+                                            //   ),
+                                            // )
                                           ],
                                         ),
                                       ],
@@ -622,48 +740,96 @@ class _MathsticksState extends State<Mathsticks> {
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      // Distribui os itens na Row
                       children: [
                         Row(
-                          // mainAxisAlignment: MainAxisAlignment.end,
-                          // Envolve o Switch e o Text em uma nova Row
                           children: [
                             const Text("Narração"),
-                            Switch(
-                              value: _isNarrationEnabled,
-                              onChanged: (value) {
-                                setState(() {
-                                  _isNarrationEnabled = value;
-                                });
-                              },
+                            Semantics(
+                              label:
+                                  'Ativar/desativar narração', // Label semântico para o Switch
+                              toggled:
+                                  _isNarrationEnabled, // Indica o estado do switch
+                              child: Switch(
+                                value: _isNarrationEnabled,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isNarrationEnabled = value;
+                                  });
+                                },
+                              ),
                             ),
                           ],
                         ),
-                        ElevatedButton(
-                          onPressed: () {
-                            _executeActions();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Colors.blue, // ou outra cor adequada
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 10),
-
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                  8.0), // Define o raio do arredondamento
+                        Semantics(
+                          label:
+                              'Executar ações da história', // Label semântico para o botão
+                          button: true, // Indica que é um botão
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _executeActions();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
                             ),
-                          ),
-                          child: const Text(
-                            "Fazer História",
-                            style: TextStyle(
-                              fontSize: 16, // Aumenta o tamanho da fonte
-                              color: Colors.white, // Cor da fonte
+                            child: const Text(
+                              "Fazer História",
+                              style:
+                                  TextStyle(fontSize: 16, color: Colors.white),
                             ),
                           ),
                         ),
                       ],
                     ),
+
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    //   // Distribui os itens na Row
+                    //   children: [
+                    //     Row(
+                    //       // mainAxisAlignment: MainAxisAlignment.end,
+                    //       // Envolve o Switch e o Text em uma nova Row
+                    //       children: [
+                    //         const Text("Narração"),
+                    //         Switch(
+                    //           value: _isNarrationEnabled,
+                    //           onChanged: (value) {
+                    //             setState(() {
+                    //               _isNarrationEnabled = value;
+                    //             });
+                    //           },
+                    //         ),
+                    //       ],
+                    //     ),
+                    //     ElevatedButton(
+                    //       onPressed: () {
+                    //         _executeActions();
+                    //       },
+                    //       style: ElevatedButton.styleFrom(
+                    //         backgroundColor:
+                    //             Colors.blue, // ou outra cor adequada
+                    //         padding: const EdgeInsets.symmetric(
+                    //             horizontal: 10, vertical: 10),
+
+                    //         shape: RoundedRectangleBorder(
+                    //           borderRadius: BorderRadius.circular(
+                    //               8.0), // Define o raio do arredondamento
+                    //         ),
+                    //       ),
+                    //       child: const Text(
+                    //         "Fazer História",
+                    //         style: TextStyle(
+                    //           fontSize: 16, // Aumenta o tamanho da fonte
+                    //           color: Colors.white, // Cor da fonte
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
                   ],
                 ),
               );
@@ -695,6 +861,9 @@ class _MathsticksState extends State<Mathsticks> {
 
     return Scaffold(
       drawer: Drawer(
+        //     child: Scrollbar(
+        // thumbVisibility: true,
+        // controller: _drawerScrollController,
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -711,52 +880,63 @@ class _MathsticksState extends State<Mathsticks> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          const Text(
-                            'Apoio',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                          Semantics(
+                            // Adiciona semântica para o título "Apoio"
+                            // label: 'Apoio',
+                            // header: true, // Indica que é um cabeçalho/título
+                            child: const Text(
+                              'Apoio',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
                           ),
                           const SizedBox(
                               height: 1), // Espaço entre o texto e as imagens
-                          Container(
-                            padding: const EdgeInsets.all(10.0),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 8,
-                                  offset: const Offset(2, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Image.asset(
-                                  'assets/images/IFSP_Logo.png',
-                                  height: 70,
-                                  fit: BoxFit.contain,
-                                ),
-                                const SizedBox(width: 5),
-                                Image.asset(
-                                  'assets/images/CNPQ_Logo.png',
-                                  height: 70,
-                                  fit: BoxFit.contain,
-                                ),
-                                const SizedBox(width: 5),
-                                Image.asset(
-                                  'assets/images/RUMO_Logo.png',
-                                  height: 70,
-                                  fit: BoxFit.contain,
-                                ),
-                              ],
+
+                          Semantics(
+                            label:
+                                'Logotipos dos apoiadores: IFSP, CNPQ e RUMO à Educação Matemática Inclusiva', // Descrição das imagens
+                            // image: true,
+                            child: Container(
+                              padding: const EdgeInsets.all(10.0),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(15),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(2, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Image.asset(
+                                    'assets/images/IFSP_Logo.png',
+                                    height: 70,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Image.asset(
+                                    'assets/images/CNPQ_Logo.png',
+                                    height: 70,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Image.asset(
+                                    'assets/images/RUMO_Logo.png',
+                                    height: 70,
+                                    fit: BoxFit.contain,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -764,13 +944,19 @@ class _MathsticksState extends State<Mathsticks> {
                     ),
                   ),
                   Positioned(
-                    bottom: 105,
-                    left: 240,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.white),
-                      onPressed: () {
-                        Navigator.pop(context);
-                      },
+                    bottom: 100,
+                    left: 230,
+                    child: Semantics(
+                      // Adiciona o Semantics
+                      label:
+                          'Botão de Fechar menu', // Label semântico para o botão
+                      // button: true, // Indica que é um botão
+                      child: IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
                     ),
                   ),
                 ],
@@ -778,21 +964,36 @@ class _MathsticksState extends State<Mathsticks> {
             ),
             SwitchListTile(
               // dense: true,
-              title: const Text("Joystick"),
+              title: Semantics(
+                label:
+                    'Botões de controle de movimentos', // Descreve a função do SwitchListTile
+                child: Text("Joystick"),
+              ),
               value: _showJoystick,
               onChanged: (bool value) {
                 setState(() {
                   _showJoystick = value;
                 });
               },
-              secondary: Icon(
-                _showJoystick ? Icons.gamepad : Icons.gamepad_outlined,
-                color: Colors.blue,
+              secondary: Semantics(
+                label: _showJoystick
+                    ? 'Joystick ativado'
+                    : 'Joystick desativado', // Estado atual
+                child: Icon(
+                  _showJoystick ? Icons.gamepad : Icons.gamepad_outlined,
+                  color: Colors.blue,
+                ),
               ),
             ),
             ListTile(
               // dense: true,
-              title: const Text("Limpar Tela"),
+              title: Semantics(
+                label:
+                    'Opção para apagar todos os palitos que estão adicionados na tela', // Descreve a ação
+                button:
+                    true, // Indica que o ListTile é interativo como um botão.
+                child: const Text("Limpar Tela"),
+              ),
               leading: const Icon(Icons.delete, color: Colors.red),
               onTap: () {
                 Navigator.pop(context);
@@ -802,45 +1003,58 @@ class _MathsticksState extends State<Mathsticks> {
                   builder: (BuildContext context) {
                     return AlertDialog(
                       backgroundColor: Colors.white.withOpacity(0.8),
-                      title: const Center(
-                        // Centraliza o título do AlertDialog
-                        child: Text(
-                          "Limpar Tela",
-                          style: TextStyle(fontSize: 18),
+                      title: Center(
+                        child: Semantics(
+                          label:
+                              'Campo de Confirmação de Limpeza', // Descreve o propósito do diálogo.
+                          child: const Text(
+                            "Limpar Tela",
+                            style: TextStyle(fontSize: 18),
+                          ),
                         ),
                       ),
                       content: const Text(
                         "Deseja remover todos os palitos da tela?",
-                        textAlign: TextAlign
-                            .center, // Centraliza o conteúdo do AlertDialog
+                        textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 16),
                       ),
                       actionsAlignment: MainAxisAlignment.center,
                       actions: [
-                        ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                  8.0), // Define o raio do arredondamento
+                        Semantics(
+                          // Torna o botão cancela acessível
+                          button: true,
+                          label: 'Cancelar',
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                    8.0), // Define o raio do arredondamento
+                              ),
                             ),
+                            child: const Text("Cancelar"),
                           ),
-                          child: const Text("Cancelar"),
                         ),
-                        ElevatedButton(
-                          onPressed: () {
-                            palitoController.clearPalitos();
-                            Navigator.of(context).pop();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                  8.0), // Define o raio do arredondamento
+                        Semantics(
+                          // Torna o botão Limpar acessível
+                          button: true,
+                          label:
+                              'Confirmar e limpar todos os palitos', // Seja descritivo
+                          child: ElevatedButton(
+                            onPressed: () {
+                              palitoController.clearPalitos();
+                              Navigator.of(context).pop();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                    8.0), // Define o raio do arredondamento
+                              ),
                             ),
+                            child: const Text("Limpar"),
                           ),
-                          child: const Text("Limpar"),
                         ),
                       ],
                     );
@@ -849,47 +1063,61 @@ class _MathsticksState extends State<Mathsticks> {
               },
             ),
             ListTile(
-              // dense: true,
-              leading: const Icon(Icons.zoom_in),
-              subtitle: Consumer<CharacterController>(
-                builder: (context, characterController, child) {
-                  return Slider(
-                    value: _palitoSize,
-                    min: 50.0,
-                    max: 120.0,
-                    divisions: 7,
-                    label: 'Tamanho do Palito',
-                    onChanged: (double value) {
-                      setState(() {
-                        _palitoSize = value;
-                        characterController.setStepSize(value);
-                      });
-                    },
-                  );
-                },
+              leading: const Icon(Icons
+                  .zoom_in), // Ícone complementar, sem necessidade de Semantics.
+              subtitle: Semantics(
+                label:
+                    'Slider para ajustar o tamanho do palito. Tamanho atual: ${_palitoSize.toStringAsFixed(0)}. Deslize para os lados para aumentar ou diminuir',
+                child: Consumer<CharacterController>(
+                  builder: (context, characterController, child) {
+                    return Slider(
+                      value: _palitoSize,
+                      min: 50.0,
+                      max: 120.0,
+                      divisions: 7,
+                      label:
+                          'Tamanho do Palito', // Label visual, importante para todos os usuários
+                      onChanged: (double value) {
+                        setState(() {
+                          _palitoSize = value;
+                          characterController.setStepSize(value);
+                        });
+                      },
+                    );
+                  },
+                ),
               ),
             ),
             ListTile(
-              // dense: true,
-              leading: const Icon(Icons.speed),
-              subtitle: Slider(
-                value: _narrationSpeed,
-                min: 0.7,
-                max: 2.0,
-                divisions: 8,
-                label: 'Velocidade de Narração',
-                onChanged: (double value) {
-                  setState(() {
-                    _narrationSpeed = value;
-                    _audioService.setSpeed(
-                        _narrationSpeed); // Atualiza a velocidade no AudioService
-                  });
-                },
+              leading: const Icon(
+                  Icons.speed), // Ícone de suporte visual, sem Semantics
+              subtitle: Semantics(
+                label:
+                    'Slider para ajustar a velocidade da narração. Velocidade atual: ${_narrationSpeed.toStringAsFixed(1)}x. Deslize para os lados para aumentar ou diminuir', // Label semântico dinâmico
+                child: Slider(
+                  value: _narrationSpeed,
+                  min: 0.7,
+                  max: 2.0,
+                  divisions: 8,
+                  label:
+                      'Velocidade de Narração', // Label visual para todos os usuários
+                  onChanged: (double value) {
+                    setState(() {
+                      _narrationSpeed = value;
+                      _audioService.setSpeed(_narrationSpeed);
+                    });
+                  },
+                ),
               ),
             ),
             ListTile(
+              title: Semantics(
+                label: 'Quantidade de palitos na tela $_palitoCount',
+                button: true, // Indica que o ListTile é interativo
+                child: const Text("Contador de Palitos"),
+              ),
               // dense: true,
-              title: const Text("Contador de Palitos"),
+
               trailing: _showCount
                   ? Container(
                       padding: const EdgeInsets.all(8),
@@ -909,8 +1137,12 @@ class _MathsticksState extends State<Mathsticks> {
               },
             ),
             ListTile(
-              // dense: true,
-              title: const Text("Criar História"),
+              title: Semantics(
+                label:
+                    'Opção para abrir o campo de Criar história', // Label mais descritivo
+                button: true, // Indica que o ListTile é um botão
+                child: const Text("Criar História"),
+              ),
               onTap: () {
                 _showCreateStoryModal(context);
               },
@@ -928,12 +1160,19 @@ class _MathsticksState extends State<Mathsticks> {
           children: [
             Builder(
               builder: (context) {
-                return IconButton(
-                  icon: const Icon(Icons.menu, color: Colors.blue),
-                  tooltip: "Abrir menu",
-                  onPressed: () {
-                    Scaffold.of(context).openDrawer();
-                  },
+                return Semantics(
+                  // Envolve o IconButton com Semantics
+                  label:
+                      'Abrir menu de navegação', // Descrição mais completa da função
+                  button: true, // Indica que é um botão
+                  child: IconButton(
+                    icon: const Icon(Icons.menu, color: Colors.blue),
+                    tooltip:
+                        "Abrir menu", // Mantém o tooltip para usuários sem deficiência visual
+                    onPressed: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                  ),
                 );
               },
             ),
@@ -946,7 +1185,7 @@ class _MathsticksState extends State<Mathsticks> {
                         // const SizedBox(height: 18),
 
                         MenuButton(
-                          iconPath: 'assets/images/palitov.png',
+                          iconPath: 'assets/images/Palito V.png',
                           label: "Palito V",
                           tooltip: "Adicionar palito vertical",
                           semanticsLabel: "Adicionar palito vertical",
@@ -960,12 +1199,12 @@ class _MathsticksState extends State<Mathsticks> {
                             final position = Offset(
                                 controller.xPosition + offsetX,
                                 controller.yPosition + offsetY);
-                            palitoController.addPalito(position, "palitov",
+                            palitoController.addPalito(position, "Palito V",
                                 "Palito vertical", _palitoSize);
                           },
                         ),
                         MenuButton(
-                          iconPath: 'assets/images/palitodd.png',
+                          iconPath: 'assets/images/Palito DD.png',
                           label: "Palito DD",
                           tooltip: "Adicionar palito diagonal à direita",
                           semanticsLabel: "Adicionar palito diagonal à direita",
@@ -981,12 +1220,12 @@ class _MathsticksState extends State<Mathsticks> {
                             final position = Offset(
                                 controller.xPosition + offsetX,
                                 controller.yPosition + offsetY);
-                            palitoController.addPalito(position, "palitodd",
+                            palitoController.addPalito(position, "Palito DD",
                                 "Palito diagonal à direita", _palitoSize);
                           },
                         ),
                         MenuButton(
-                          iconPath: 'assets/images/palitode.png',
+                          iconPath: 'assets/images/Palito DE.png',
                           label: "Palito DE",
                           tooltip: "Adicionar palito diagonal à esquerda",
                           semanticsLabel:
@@ -1003,12 +1242,12 @@ class _MathsticksState extends State<Mathsticks> {
                             final position = Offset(
                                 controller.xPosition + offsetX,
                                 controller.yPosition + offsetY);
-                            palitoController.addPalito(position, "palitode",
+                            palitoController.addPalito(position, "Palito DE",
                                 "Palito diagonal à esquerda", _palitoSize);
                           },
                         ),
                         MenuButton(
-                          iconPath: 'assets/images/palitoh.png',
+                          iconPath: 'assets/images/Palito H.png',
                           label: "Palito H",
                           tooltip: "Adicionar palito horizontal",
                           semanticsLabel: "Adicionar palito horizontal",
@@ -1021,7 +1260,7 @@ class _MathsticksState extends State<Mathsticks> {
                             final position = Offset(
                                 controller.xPosition + baseOffsetX,
                                 controller.yPosition + offsetY);
-                            palitoController.addPalito(position, "palitoh",
+                            palitoController.addPalito(position, "Palito H",
                                 "Palito horizontal", _palitoSize);
                           },
                         ),
@@ -1088,6 +1327,70 @@ class _MathsticksState extends State<Mathsticks> {
                                             ),
                                           ),
                                           child: const Text("Remover"),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      backgroundColor:
+                                          Colors.white.withOpacity(0.8),
+                                      title: Center(
+                                        child: Semantics(
+                                          // Adiciona Semantics ao título
+                                          // label: "Remover Palito",
+                                          child: const Text(
+                                            "Remover Palito",
+                                            style: TextStyle(fontSize: 18),
+                                          ),
+                                        ),
+                                      ),
+                                      content: const Text(
+                                        "Deseja remover o palito?",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(fontSize: 16),
+                                      ),
+                                      actionsAlignment:
+                                          MainAxisAlignment.center,
+                                      actions: [
+                                        Semantics(
+                                          // Adiciona Semantics ao botão "Cancelar"
+                                          label: 'Cancelar',
+                                          button: true,
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8.0),
+                                              ),
+                                            ),
+                                            child: const Text("Cancelar"),
+                                          ),
+                                        ),
+                                        Semantics(
+                                          // Adiciona Semantics ao botão "Remover"
+                                          label: 'Remover',
+                                          button: true,
+                                          child: ElevatedButton(
+                                            onPressed: () {
+                                              palitoController
+                                                  .removePalito(palito);
+                                              Navigator.of(context).pop();
+                                            },
+                                            style: ElevatedButton.styleFrom(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8.0),
+                                              ),
+                                            ),
+                                            child: const Text("Remover"),
+                                          ),
                                         ),
                                       ],
                                     );

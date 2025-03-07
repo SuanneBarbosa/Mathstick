@@ -40,7 +40,7 @@ class PalitoController extends ChangeNotifier {
   List<Palito> get palitos => _palitos;
 
   void addPalito(Offset position, String type, String semanticsLabel, double size) {
-    const validTypes = ["palitov", "palitodd", "palitode", "palitoh"];
+    const validTypes = ["Palito V", "Palito DD", "Palito DE", "Palito H"];
     if (!validTypes.contains(type)) {
       throw ArgumentError("Tipo de palito inválido: $type");
     }
