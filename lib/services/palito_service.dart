@@ -13,7 +13,7 @@ class Palito {
     required this.size,
   });
 
-  Offset getWrappedPosition(double screenWidth, double screenHeight) {
+ Offset getWrappedPosition(double screenWidth, double screenHeight) {
     double x = position.dx;
     double y = position.dy;
 
@@ -31,8 +31,25 @@ class Palito {
 
     return Offset(x, y);
   }
-}
+  
+  bool isPartiallyOutside(double screenWidth, double screenHeight) {
+    final double left   = position.dx;
+    final double top    = position.dy;
+    final double right  = left + size;
+    final double bottom = top + size;
 
+    final bool fullyInside = (left >= 0) &&
+                             (right <= screenWidth) &&
+                             (top >= 0) &&
+                             (bottom <= screenHeight);
+
+    final bool fullyOutside = (right < 0) ||
+                              (left > screenWidth) ||
+                              (bottom < 0) ||
+                              (top > screenHeight);
+    return !fullyInside && !fullyOutside;
+  }
+}
 
 class PalitoController extends ChangeNotifier {
   final List<Palito> _palitos = []; // Lista de palitos
@@ -45,7 +62,13 @@ class PalitoController extends ChangeNotifier {
       throw ArgumentError("Tipo de palito inválido: $type");
     }
     _palitos.add(
-        Palito(position: position, type: type, semanticsLabel: semanticsLabel, size: size,));
+      Palito(
+        position: position,
+        type: type,
+        semanticsLabel: semanticsLabel,
+        size: size,
+      ),
+    );
     notifyListeners();
   }
 

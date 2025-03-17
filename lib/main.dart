@@ -8,7 +8,6 @@ import 'user_interface/screens/mathsticks_screen.dart';
 void main() {
  WidgetsFlutterBinding.ensureInitialized();
 
-// Somente na orientação vertical.
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
@@ -26,7 +25,7 @@ class Main extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => CharacterController()),
-        ChangeNotifierProvider(create: (_) => PalitoController()), // Adiciona o PalitoController
+        ChangeNotifierProvider(create: (_) => PalitoController()), 
       ],
       child: const MaterialApp(
         title: 'Mathsticks',
