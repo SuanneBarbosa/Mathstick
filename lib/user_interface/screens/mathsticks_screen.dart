@@ -10,7 +10,6 @@ import 'package:flutter/services.dart';
 import 'instruction_screen.dart';
 import 'tanks_screen.dart';
 
-
 class DropdownOption {
   final String value;
   final String label;
@@ -40,8 +39,7 @@ class _MathsticksState extends State<Mathsticks> {
   int _palitoCount = 0;
   bool _showCount = false;
   final ScrollController _scrollController = ScrollController();
-  bool _executingStory = false; // Variável para controlar a execução da história
- 
+  bool _executingStory = false;
 
   @override
   void dispose() {
@@ -64,49 +62,117 @@ class _MathsticksState extends State<Mathsticks> {
     });
   }
 
+  void announceForAccessibility(String message, BuildContext context) {
+    final overlay = Overlay.of(context);
+    final entry = OverlayEntry(
+      builder: (_) => Positioned(
+        top: 0,
+        left: 0,
+        child: Semantics(
+          label: message,
+          liveRegion: true,
+          container: true,
+          child: const SizedBox.shrink(),
+        ),
+      ),
+    );
+
+    overlay.insert(entry);
+    Future.delayed(const Duration(seconds: 2), () => entry.remove());
+  }
+
   Future<void> _executeActions() async {
     final characterController =
         Provider.of<CharacterController>(context, listen: false);
+    final palitoController =
+        Provider.of<PalitoController>(context, listen: false);
     characterController.isHistoryMode = true;
-_executingStory = true; // Inicia a execução
+    _executingStory = true;
 
-    
+    bool borderAlertShown =
+        false; 
+
     for (final actionSet in actionSets) {
       int repeatCount = actionSet['n'] as int;
       List<StoryAction> actions = actionSet['actions'] as List<StoryAction>;
       for (int i = 0; i < repeatCount; i++) {
         for (StoryAction action in actions) {
-           if (!_executingStory) break; // Verifica se deve parar
+          if (!_executingStory) break;
+
+          
+          if (characterController.isAtAnyBorder() && !borderAlertShown) {
+            stopStory();
+            String borderMessage =
+                characterController.getBorderHit(); 
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+             
+              announceForAccessibility(borderMessage, context);
+
+             
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(borderMessage),
+                ),
+              );
+            });
+            borderAlertShown = true; 
+            return; 
+          }
+          borderAlertShown = false;
+
+         
+          bool anyPalitoOffscreen = false;
+          for (Palito palito in palitoController.palitos) {
+            if (palito.isPartiallyOffscreen(MediaQuery.of(context).size.width,
+                MediaQuery.of(context).size.height, context)) {
+              anyPalitoOffscreen = true;
+              break;
+            }
+          }
+
+          if (anyPalitoOffscreen) {
+            stopStory();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Semantics(
+                    label: 'Alerta: Palito fora da tela.',
+                    child: const Text(
+                      "Um palito está parcialmente fora da tela. A história foi interrompida.",
+                    ),
+                  ),
+                ),
+              );
+            });
+            return;
+          }
+
           if (action.type == StoryActionType.move) {
             await _moveCharacter(action.direction!);
           } else {
             await _addPalito(context, action);
           }
           await Future.delayed(
-          _isNarrationEnabled
-              ? const Duration(milliseconds: 1600)
-              : const Duration(milliseconds: 100), // <- diferença aqui
-        );
-
+            _isNarrationEnabled
+                ? const Duration(milliseconds: 1600)
+                : const Duration(milliseconds: 100),
+          );
         }
-          if (!_executingStory) break; // Verifica se deve parar
+        if (!_executingStory) break;
       }
-        if (!_executingStory) break; // Verifica se deve parar
+      if (!_executingStory) break;
     }
     characterController.isHistoryMode = false;
-     _executingStory = false; // Finaliza a execução
+    _executingStory = false;
   }
 
-  
-   void stopStory() {
+  void stopStory() {
     setState(() {
-      _executingStory = false; // Define a flag para parar a história
-      _audioService.stopAudio();   // Para a narração imediatamente
+      _executingStory = false;
+      _audioService.stopAudio();
     });
   }
-  
-  
-  
+
   static final Map<String, String> _actionLabels = {
     'Palito V': 'Palito V',
     'Palito H': 'Palito H',
@@ -292,21 +358,21 @@ _executingStory = true; // Inicia a execução
       // if (!_isNarrationEnabled && !_palitoOffscreenAlertShown) {
       // if (!_isNarrationEnabled) {
       // _palitoOffscreenAlertShown = true;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-      stopStory();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Semantics(
-            label: 'Alerta: Palito fora da tela.',
-            child: const Text(
-              "Não é possível adicionar um Palito fora da tela. Diminua o tamanho ou mude a posição.",
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        stopStory();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Semantics(
+              label: 'Alerta: Palito fora da tela.',
+              child: const Text(
+                "Não é possível adicionar um Palito fora da tela. Diminua o tamanho ou mude a posição.",
+              ),
             ),
           ),
-        ),
-      );
-       });
+        );
+      });
       // }
-      return; // Cancela a adição
+      return; 
     } else {
       // _palitoOffscreenAlertShown = false;
     }
@@ -880,15 +946,14 @@ _executingStory = true; // Inicia a execução
                       ),
                       Consumer<CharacterController>(
                         builder: (context, controller, child) {
-                          if (controller.borderAlert != null) {
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(controller.borderAlert!)),
-                              );
-                              // controller.clearBorderAlert();
-                            });
-                          }
+                          // if (controller.borderAlert != null) {
+                          //   WidgetsBinding.instance.addPostFrameCallback((_) {
+                          //     ScaffoldMessenger.of(context).showSnackBar(
+                          //       SnackBar(
+                          //           content: Text(controller.borderAlert!)),
+                          //     );
+                          //   });
+                          // }
                           return Positioned(
                             top: controller.yPosition,
                             left: controller.xPosition,
@@ -924,9 +989,8 @@ _executingStory = true; // Inicia a execução
                                 }
                               },
                               child: Semantics(
-                                label:
-                                    'Personagem', 
-                                image: true, 
+                                label: 'Personagem',
+                                image: true,
                                 child: Image.asset(
                                   'assets/images/personagem.png',
                                   height: 70,
@@ -987,7 +1051,7 @@ _executingStory = true; // Inicia a execução
                                       ),
                                     );
                                   }
-                                  return; 
+                                  return;
                                 } else {
                                   // _palitoOffscreenAlertShown = false;
                                 }
@@ -1046,7 +1110,7 @@ _executingStory = true; // Inicia a execução
                                       ),
                                     );
                                   }
-                                  return; 
+                                  return;
                                 } else {
                                   // _palitoOffscreenAlertShown = false;
                                 }
@@ -1108,7 +1172,7 @@ _executingStory = true; // Inicia a execução
                                       ),
                                     );
                                   }
-                                  return; 
+                                  return;
                                 } else {
                                   // _palitoOffscreenAlertShown = false;
                                 }
@@ -1165,7 +1229,7 @@ _executingStory = true; // Inicia a execução
                                       ),
                                     );
                                   }
-                                  return; 
+                                  return;
                                 } else {
                                   // _palitoOffscreenAlertShown = false;
                                 }
@@ -1321,16 +1385,6 @@ _executingStory = true; // Inicia a execução
                       ),
                     ],
                   ),
-                ),
-
-                 ListTile(
-                  leading: const Icon(Icons.stop, color: Colors.blue),
-                  title: Semantics(
-                    label: 'Parar a história',
-                    button: true,
-                    child: const Text("Parar História"),
-                  ),
-                  onTap: stopStory, // Chama a função para parar
                 ),
                 ListTile(
                   title: Semantics(

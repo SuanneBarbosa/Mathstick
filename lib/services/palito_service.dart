@@ -75,7 +75,7 @@ class PalitoController extends ChangeNotifier {
 
   List<Palito> get palitos => _palitos;
 
-  /// Adiciona um palito.
+  
   void addPalito(
       Offset position, String type, String semanticsLabel, double size) {
     const validTypes = ["Palito V", "Palito DD", "Palito DE", "Palito H"];
