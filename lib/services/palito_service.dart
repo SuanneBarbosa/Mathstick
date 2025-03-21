@@ -13,7 +13,7 @@ class Palito {
     required this.size,
   });
 
- Offset getWrappedPosition(double screenWidth, double screenHeight) {
+  Offset getWrappedPosition(double screenWidth, double screenHeight) {
     double x = position.dx;
     double y = position.dy;
 
@@ -31,54 +31,110 @@ class Palito {
 
     return Offset(x, y);
   }
-  
-  bool isPartiallyOutside(double screenWidth, double screenHeight) {
-    final double left   = position.dx;
-    final double top    = position.dy;
-    final double right  = left + size;
+
+  bool isPartiallyOffscreen(
+      double screenWidth, double screenHeight, BuildContext context) {
+    final double left = position.dx;
+    final double top = position.dy + MediaQuery.of(context).viewPadding.top;
+    final double right = left + size;
     final double bottom = top + size;
 
-    final bool fullyInside = (left >= 0) &&
-                             (right <= screenWidth) &&
-                             (top >= 0) &&
-                             (bottom <= screenHeight);
+    return left < 0 || top < 0 || right > screenWidth || bottom > screenHeight;
+  }
 
-    final bool fullyOutside = (right < 0) ||
-                              (left > screenWidth) ||
-                              (bottom < 0) ||
-                              (top > screenHeight);
-    return !fullyInside && !fullyOutside;
+  List<String> getOffscreenEdges(
+      double screenWidth, double screenHeight, BuildContext context) {
+    final edges = <String>[];
+
+    final double leftPos = position.dx;
+    final double topPos = position.dy + MediaQuery.of(context).viewPadding.top;
+    final double rightPos = leftPos + size;
+    final double bottomPos = topPos + size;
+
+    if (leftPos < 0) {
+      edges.add('left');
+    }
+    if (rightPos > screenWidth) {
+      edges.add('right');
+    }
+    if (topPos < 0) {
+      edges.add('top');
+    }
+    if (bottomPos > screenHeight) {
+      edges.add('bottom');
+    }
+
+    return edges;
   }
 }
 
 class PalitoController extends ChangeNotifier {
-  final List<Palito> _palitos = []; // Lista de palitos
+  final List<Palito> _palitos = [];
+
+  final Map<Palito, Set<String>> _edgesAlertedForPalito = {};
 
   List<Palito> get palitos => _palitos;
 
-  void addPalito(Offset position, String type, String semanticsLabel, double size) {
+  /// Adiciona um palito.
+  void addPalito(
+      Offset position, String type, String semanticsLabel, double size) {
     const validTypes = ["Palito V", "Palito DD", "Palito DE", "Palito H"];
     if (!validTypes.contains(type)) {
       throw ArgumentError("Tipo de palito inválido: $type");
     }
-    _palitos.add(
-      Palito(
-        position: position,
-        type: type,
-        semanticsLabel: semanticsLabel,
-        size: size,
-      ),
+    final newPalito = Palito(
+      position: position,
+      type: type,
+      semanticsLabel: semanticsLabel,
+      size: size,
     );
+    _palitos.add(newPalito);
+
+    _edgesAlertedForPalito[newPalito] = <String>{};
+
     notifyListeners();
   }
 
   void removePalito(Palito palito) {
     _palitos.remove(palito);
+    _edgesAlertedForPalito.remove(palito);
     notifyListeners();
   }
 
   void clearPalitos() {
     _palitos.clear();
+    _edgesAlertedForPalito.clear();
     notifyListeners();
+  }
+
+  void checkAllPalitosOffscreen(
+      BuildContext context, double screenWidth, double screenHeight) {
+    for (final palito in _palitos) {
+      final offscreenEdges =
+          palito.getOffscreenEdges(screenWidth, screenHeight, context);
+
+      final alertedEdges = _edgesAlertedForPalito[palito] ?? <String>{};
+
+      for (final edge in offscreenEdges) {
+        if (!alertedEdges.contains(edge)) {
+          alertedEdges.add(edge);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("O palito '${palito.type}' saiu pela borda $edge!"),
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      }
+
+      final edgesNoLongerOffscreen =
+          alertedEdges.difference(offscreenEdges.toSet());
+
+      for (final edge in edgesNoLongerOffscreen) {
+        alertedEdges.remove(edge);
+      }
+      _edgesAlertedForPalito[palito] = alertedEdges;
+    }
   }
 }

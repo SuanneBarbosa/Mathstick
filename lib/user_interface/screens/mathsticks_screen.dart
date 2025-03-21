@@ -4,12 +4,12 @@ import '../../services/character_service.dart';
 import '../../services/palito_service.dart';
 import '../widgets/joystick_button.dart';
 import '../widgets/menu_button.dart';
-// import '../widgets/action_button.dart';
 import '../../data/story_action.dart';
 import '../../services/audio_service.dart';
 import 'package:flutter/services.dart';
 import 'instruction_screen.dart';
 import 'tanks_screen.dart';
+
 
 class DropdownOption {
   final String value;
@@ -37,10 +37,11 @@ class _MathsticksState extends State<Mathsticks> {
   bool _isNarrationEnabled = false;
   DropdownOption? _selectedAction;
   final ScrollController _drawerScrollController = ScrollController();
-  bool _alertDisplayed = false;
   int _palitoCount = 0;
   bool _showCount = false;
   final ScrollController _scrollController = ScrollController();
+  bool _executingStory = false; // Variável para controlar a execução da história
+ 
 
   @override
   void dispose() {
@@ -64,24 +65,48 @@ class _MathsticksState extends State<Mathsticks> {
   }
 
   Future<void> _executeActions() async {
+    final characterController =
+        Provider.of<CharacterController>(context, listen: false);
+    characterController.isHistoryMode = true;
+_executingStory = true; // Inicia a execução
+
+    
     for (final actionSet in actionSets) {
       int repeatCount = actionSet['n'] as int;
       List<StoryAction> actions = actionSet['actions'] as List<StoryAction>;
       for (int i = 0; i < repeatCount; i++) {
         for (StoryAction action in actions) {
+           if (!_executingStory) break; // Verifica se deve parar
           if (action.type == StoryActionType.move) {
             await _moveCharacter(action.direction!);
           } else {
-            await _addPalito(action);
+            await _addPalito(context, action);
           }
-          if (_isNarrationEnabled) {
-            await Future.delayed(const Duration(milliseconds: 1600));
-          }
+          await Future.delayed(
+          _isNarrationEnabled
+              ? const Duration(milliseconds: 1600)
+              : const Duration(milliseconds: 100), // <- diferença aqui
+        );
+
         }
+          if (!_executingStory) break; // Verifica se deve parar
       }
+        if (!_executingStory) break; // Verifica se deve parar
     }
+    characterController.isHistoryMode = false;
+     _executingStory = false; // Finaliza a execução
   }
 
+  
+   void stopStory() {
+    setState(() {
+      _executingStory = false; // Define a flag para parar a história
+      _audioService.stopAudio();   // Para a narração imediatamente
+    });
+  }
+  
+  
+  
   static final Map<String, String> _actionLabels = {
     'Palito V': 'Palito V',
     'Palito H': 'Palito H',
@@ -106,7 +131,6 @@ class _MathsticksState extends State<Mathsticks> {
         value: 'Direita',
         label: 'Saltar para Direita',
         type: StoryActionType.move),
-    // DropdownOption(value: '-', label: '-----', type: StoryActionType.none),
     DropdownOption(
         value: 'Palito V',
         label: 'Palito Vertical',
@@ -172,62 +196,18 @@ class _MathsticksState extends State<Mathsticks> {
     }
   }
 
-  void _displayStickOutAlert(String tipoPalito) {
-    if (_alertDisplayed) return;
-    _alertDisplayed = true;
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: Colors.white.withOpacity(0.8),
-          title: Center(
-            child: Semantics(
-              label: 'Alerta de Palito Fora da tela',
-              child: const Text(
-                "Palito Parcialmente Fora da tela!",
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-          ),
-          content: const Text(
-            // "Um $tipoPalito está parcialmente fora da tela. " +
-            "Diminua o tamanho ou altere a posição.",
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            Semantics(
-              button: true,
-              label: 'Confirmar',
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  //  _alertDisplayed  = false;
-                },
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                ),
-                child: const Text("Ok"),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _addPalito(StoryAction action) async {
+  Future<void> _addPalito(BuildContext context, StoryAction action) async {
     final palitoController =
         Provider.of<PalitoController>(context, listen: false);
     final characterController =
         Provider.of<CharacterController>(context, listen: false);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
+    // ignore: unused_local_variable
     const double baseSize = 50;
-    double baseOffsetX = 0;
-    double baseOffsetY = 0;
+    // ignore: unused_local_variable
+    double baseOffsetX = 0, baseOffsetY = 0;
 
     switch (action.palitoType) {
       case "Palito V":
@@ -275,33 +255,63 @@ class _MathsticksState extends State<Mathsticks> {
         baseOffsetY = 0;
     }
 
-    final sizeDiff =  _palitoSize - baseSize;
+    final sizeDiff = _palitoSize - 50;
     double offsetX = 0, offsetY = 0;
 
-    if (action.palitoType == "Palito V") {
-      offsetX = baseOffsetX - (sizeDiff / 10) * 5;
-      offsetY = baseOffsetY - (sizeDiff / 10) * 10;
-    } else if (action.palitoType == "Palito H") {
-      offsetY = baseOffsetY - (sizeDiff / 10) * 5;
-      offsetX = baseOffsetX;
-    } else if (action.palitoType == "Palito DD") {
-      offsetX = baseOffsetX - (sizeDiff / 10) * 3;
-      offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
-    } else if (action.palitoType == "Palito DE") {
-      offsetX = baseOffsetX - (sizeDiff / 10) * 6;
-      offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
+    switch (action.palitoType) {
+      case "Palito V":
+        offsetX = 40 - (sizeDiff / 10) * 5;
+        offsetY = -25 - (sizeDiff / 10) * 10;
+        break;
+      case "Palito H":
+        offsetY = -2 - (sizeDiff / 10) * 5;
+        offsetX = 65;
+        break;
+      case "Palito DD":
+        offsetX = 52 - (sizeDiff / 10) * 3;
+        offsetY = -25 - (sizeDiff / 10) * 9.5;
+        break;
+      case "Palito DE":
+        offsetX = 27 - (sizeDiff / 10) * 6;
+        offsetY = -25 - (sizeDiff / 10) * 9.5;
+        break;
     }
 
     final position = Offset(
       characterController.xPosition + offsetX,
       characterController.yPosition + offsetY,
     );
+
+    Palito tempPalito = Palito(
+        position: position,
+        type: action.palitoType!,
+        semanticsLabel: action.palitoType!,
+        size: _palitoSize);
+
+    if (tempPalito.isPartiallyOffscreen(screenWidth, screenHeight, context)) {
+      // if (!_isNarrationEnabled && !_palitoOffscreenAlertShown) {
+      // if (!_isNarrationEnabled) {
+      // _palitoOffscreenAlertShown = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+      stopStory();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Semantics(
+            label: 'Alerta: Palito fora da tela.',
+            child: const Text(
+              "Não é possível adicionar um Palito fora da tela. Diminua o tamanho ou mude a posição.",
+            ),
+          ),
+        ),
+      );
+       });
+      // }
+      return; // Cancela a adição
+    } else {
+      // _palitoOffscreenAlertShown = false;
+    }
     palitoController.addPalito(
-      position,
-      action.palitoType!,
-      action.palitoType!,
-       _palitoSize,
-    );
+        position, action.palitoType!, action.palitoType!, _palitoSize);
   }
 
   void _addAction(int setIndex, StoryAction action) {
@@ -551,12 +561,12 @@ class _MathsticksState extends State<Mathsticks> {
                                                   final newAction = StoryAction(
                                                     type: newValue.type,
                                                     palitoType: newValue.value,
-                                                     
                                                     getActionLabel:
                                                         _getActionLabel,
                                                   );
                                                   _addAction(i, newAction);
-                                                  _addPalito(newAction);
+                                                  _addPalito(
+                                                      context, newAction);
                                                 }
                                                 setState(() {
                                                   _selectedAction = newValue;
@@ -672,9 +682,7 @@ class _MathsticksState extends State<Mathsticks> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -682,10 +690,8 @@ class _MathsticksState extends State<Mathsticks> {
                           children: [
                             const Text("Narração"),
                             Semantics(
-                              label:
-                                  'Ativar/desativar narração', // Label semântico para o Switch
-                              toggled:
-                                  _isNarrationEnabled, // Indica o estado do switch
+                              label: 'Ativar/desativar narração',
+                              toggled: _isNarrationEnabled,
                               child: Switch(
                                 value: _isNarrationEnabled,
                                 onChanged: (value) {
@@ -698,9 +704,8 @@ class _MathsticksState extends State<Mathsticks> {
                           ],
                         ),
                         Semantics(
-                          label:
-                              'Executar ações da história', // Label semântico para o botão
-                          button: true, // Indica que é um botão
+                          label: 'Executar ações da história',
+                          button: true,
                           child: ElevatedButton(
                             onPressed: () {
                               _executeActions();
@@ -758,6 +763,7 @@ class _MathsticksState extends State<Mathsticks> {
             child: Column(
               // mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
+
               children: [
                 Builder(
                   builder: (context) {
@@ -777,128 +783,22 @@ class _MathsticksState extends State<Mathsticks> {
                 Expanded(
                   child: Stack(
                     children: [
-                      SingleChildScrollView(
-                        child: Column(
-                          children: [
-                            // const SizedBox(height: 18),
-
-                            MenuButton(
-                              iconPath: 'assets/images/Palito V.png',
-                              label: "Palito V",
-                              tooltip: "Adicionar palito vertical",
-                              semanticsLabel: "Adicionar palito vertical",
-                              onTap: () {
-                                const double baseSize = 50;
-                                const double baseOffsetX = 40;
-                                const double baseOffsetY = -25;
-                                final sizeDiff = _palitoSize - baseSize;
-                                final offsetX =
-                                    baseOffsetX - (sizeDiff / 10) * 5;
-                                final offsetY =
-                                    baseOffsetY - (sizeDiff / 10) * 10;
-                                final position = Offset(
-                                    controller.xPosition + offsetX,
-                                    controller.yPosition + offsetY);
-                                palitoController.addPalito(position, "Palito V",
-                                    "Palito vertical", _palitoSize);
-                              },
-                            ),
-                            MenuButton(
-                              iconPath: 'assets/images/Palito DD.png',
-                              label: "Palito DD",
-                              tooltip: "Adicionar palito diagonal à direita",
-                              semanticsLabel:
-                                  "Adicionar palito diagonal à direita",
-                              onTap: () {
-                                const double baseSize = 50;
-                                const double baseOffsetX = 52;
-                                const double baseOffsetY = -25;
-
-                                final sizeDiff = _palitoSize - baseSize;
-                                final offsetX =
-                                    baseOffsetX - (sizeDiff / 10) * 3;
-                                final offsetY =
-                                    baseOffsetY - (sizeDiff / 10) * 9.5;
-
-                                final position = Offset(
-                                    controller.xPosition + offsetX,
-                                    controller.yPosition + offsetY);
-                                palitoController.addPalito(
-                                    position,
-                                    "Palito DD",
-                                    "Palito diagonal à direita",
-                                    _palitoSize);
-                              },
-                            ),
-                            MenuButton(
-                              iconPath: 'assets/images/Palito DE.png',
-                              label: "Palito DE",
-                              tooltip: "Adicionar palito diagonal à esquerda",
-                              semanticsLabel:
-                                  "Adicionar palito diagonal à esquerda",
-                              onTap: () {
-                                const double baseSize = 50;
-                                const double baseOffsetX = 27;
-                                const double baseOffsetY = -25;
-
-                                final sizeDiff = _palitoSize - baseSize;
-                                final offsetX =
-                                    baseOffsetX - (sizeDiff / 10) * 6;
-                                final offsetY =
-                                    baseOffsetY - (sizeDiff / 10) * 9.5;
-
-                                final position = Offset(
-                                    controller.xPosition + offsetX,
-                                    controller.yPosition + offsetY);
-                                palitoController.addPalito(
-                                    position,
-                                    "Palito DE",
-                                    "Palito diagonal à esquerda",
-                                    _palitoSize);
-                              },
-                            ),
-                            MenuButton(
-                              iconPath: 'assets/images/Palito H.png',
-                              label: "Palito H",
-                              tooltip: "Adicionar palito horizontal",
-                              semanticsLabel: "Adicionar palito horizontal",
-                              onTap: () {
-                                const double baseSize = 50;
-                                const double baseOffsetX = 65;
-                                const double baseOffsetY = -2;
-                                final sizeDiff = _palitoSize - baseSize;
-                                final offsetY =
-                                    baseOffsetY - (sizeDiff / 10) * 5;
-                                final position = Offset(
-                                    controller.xPosition + baseOffsetX,
-                                    controller.yPosition + offsetY);
-                                palitoController.addPalito(position, "Palito H",
-                                    "Palito horizontal", _palitoSize);
-                              },
-                            ),
-
-                            const SizedBox(height: 10),
-                          ],
-                        ),
-                      ),
                       Consumer<PalitoController>(
                         builder: (context, palitoController, child) {
+                          palitoController.checkAllPalitosOffscreen(
+                            context,
+                            screenWidth,
+                            screenHeight,
+                          );
                           return Stack(
                             children: palitoController.palitos.map((palito) {
                               final wrappedPosition = palito.getWrappedPosition(
                                   screenWidth, screenHeight);
-                              bool parcial = palito.isPartiallyOutside(
-                                  screenWidth, screenHeight);
-                              if (parcial) {
-                                WidgetsBinding.instance
-                                    .addPostFrameCallback((_) {
-                                  _displayStickOutAlert(palito.type);
-                                });
-                              }
                               return Positioned(
-                                top: wrappedPosition.dy,
+                                top: wrappedPosition.dy +
+                                    MediaQuery.of(context).padding.top,
                                 left: wrappedPosition.dx,
-                                child: GestureDetector(
+                                child: InkWell(
                                   onTap: () {
                                     showDialog(
                                       context: context,
@@ -908,7 +808,6 @@ class _MathsticksState extends State<Mathsticks> {
                                               Colors.white.withOpacity(0.8),
                                           title: Center(
                                             child: Semantics(
-                                              // label: "Remover Palito",
                                               child: const Text(
                                                 "Remover Palito",
                                                 style: TextStyle(fontSize: 18),
@@ -965,6 +864,7 @@ class _MathsticksState extends State<Mathsticks> {
                                     );
                                   },
                                   child: Semantics(
+                                    button: false,
                                     label: palito.semanticsLabel,
                                     child: Image.asset(
                                       'assets/images/${palito.type}.png',
@@ -980,6 +880,15 @@ class _MathsticksState extends State<Mathsticks> {
                       ),
                       Consumer<CharacterController>(
                         builder: (context, controller, child) {
+                          if (controller.borderAlert != null) {
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(controller.borderAlert!)),
+                              );
+                              // controller.clearBorderAlert();
+                            });
+                          }
                           return Positioned(
                             top: controller.yPosition,
                             left: controller.xPosition,
@@ -1014,14 +923,261 @@ class _MathsticksState extends State<Mathsticks> {
                                   }
                                 }
                               },
-                              child: Image.asset(
-                                'assets/images/personagem.png',
-                                height: 70,
-                                fit: BoxFit.contain,
+                              child: Semantics(
+                                label:
+                                    'Personagem', 
+                                image: true, 
+                                child: Image.asset(
+                                  'assets/images/personagem.png',
+                                  height: 70,
+                                  fit: BoxFit.contain,
+                                ),
                               ),
                             ),
                           );
                         },
+                      ),
+                      SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            // const SizedBox(height: 18),
+                            MenuButton(
+                              iconPath: 'assets/images/Palito V.png',
+                              label: "Palito V",
+                              tooltip: "Adicionar palito vertical",
+                              semanticsLabel: "Palito Vertical",
+                              onTap: () {
+                                final characterController =
+                                    Provider.of<CharacterController>(context,
+                                        listen: false);
+                                final palitoController =
+                                    Provider.of<PalitoController>(context,
+                                        listen: false);
+                                const double baseSize = 50;
+                                double baseOffsetX = 40;
+                                double baseOffsetY = -25;
+                                final sizeDiff = _palitoSize - baseSize;
+                                final offsetX =
+                                    baseOffsetX - (sizeDiff / 10) * 5;
+                                final offsetY =
+                                    baseOffsetY - (sizeDiff / 10) * 10;
+
+                                Offset position = Offset(
+                                  characterController.xPosition + offsetX,
+                                  characterController.yPosition + offsetY,
+                                );
+                                Palito tempPalito = Palito(
+                                    position: position,
+                                    type: "Palito V",
+                                    semanticsLabel: "Palito vertical",
+                                    size: _palitoSize);
+                                if (tempPalito.isPartiallyOffscreen(
+                                    screenWidth, screenHeight, context)) {
+                                  // if (!_isNarrationEnabled && !_palitoOffscreenAlertShown) {
+                                  if (!_isNarrationEnabled) {
+                                    // _palitoOffscreenAlertShown = true;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Semantics(
+                                          label: 'Alerta: Palito fora da tela.',
+                                          child: const Text(
+                                            "Não é possível adicionar um Palito fora da tela. Diminua o tamanho ou mude a posição.",
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return; 
+                                } else {
+                                  // _palitoOffscreenAlertShown = false;
+                                }
+                                palitoController.addPalito(position, "Palito V",
+                                    "Palito vertical", _palitoSize);
+                              },
+                            ),
+
+                            MenuButton(
+                              iconPath: 'assets/images/Palito DD.png',
+                              label: "Palito DD",
+                              tooltip: "Adicionar palito diagonal à direita",
+                              semanticsLabel: "Palito Diagonal à Direita",
+                              onTap: () {
+                                final characterController =
+                                    Provider.of<CharacterController>(context,
+                                        listen: false);
+                                final palitoController =
+                                    Provider.of<PalitoController>(context,
+                                        listen: false);
+
+                                const double baseSize = 50;
+                                double baseOffsetX = 52;
+                                double baseOffsetY = -25;
+
+                                final sizeDiff = _palitoSize - baseSize;
+                                final offsetX =
+                                    baseOffsetX - (sizeDiff / 10) * 3;
+                                final offsetY =
+                                    baseOffsetY - (sizeDiff / 10) * 9.5;
+
+                                final Offset position = Offset(
+                                  characterController.xPosition + offsetX,
+                                  characterController.yPosition + offsetY,
+                                );
+
+                                Palito tempPalito = Palito(
+                                    position: position,
+                                    type: "Palito DD",
+                                    semanticsLabel: "Palito Diagonal à Direita",
+                                    size: _palitoSize);
+
+                                if (tempPalito.isPartiallyOffscreen(
+                                    screenWidth, screenHeight, context)) {
+                                  // if (!_isNarrationEnabled && !_palitoOffscreenAlertShown) {
+                                  if (!_isNarrationEnabled) {
+                                    // _palitoOffscreenAlertShown = true;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Semantics(
+                                          label: 'Alerta: Palito fora da tela.',
+                                          child: const Text(
+                                            "Não é possível adicionar um Palito fora da tela. Diminua o tamanho ou mude a posição.",
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return; 
+                                } else {
+                                  // _palitoOffscreenAlertShown = false;
+                                }
+
+                                palitoController.addPalito(
+                                    position,
+                                    "Palito DD",
+                                    "Palito Diagonal à Direita",
+                                    _palitoSize);
+                              },
+                            ),
+                            MenuButton(
+                              iconPath: 'assets/images/Palito DE.png',
+                              label: "Palito DE",
+                              tooltip: "Adicionar palito diagonal à esquerda",
+                              semanticsLabel: "Palito Diagonal à Esquerda",
+                              onTap: () {
+                                final characterController =
+                                    Provider.of<CharacterController>(context,
+                                        listen: false);
+                                final palitoController =
+                                    Provider.of<PalitoController>(context,
+                                        listen: false);
+
+                                const double baseSize = 50;
+                                double baseOffsetX = 27;
+                                double baseOffsetY = -25;
+
+                                final sizeDiff = _palitoSize - baseSize;
+                                final offsetX =
+                                    baseOffsetX - (sizeDiff / 10) * 6;
+                                final offsetY =
+                                    baseOffsetY - (sizeDiff / 10) * 9.5;
+
+                                final Offset position = Offset(
+                                  characterController.xPosition + offsetX,
+                                  characterController.yPosition + offsetY,
+                                );
+
+                                Palito tempPalito = Palito(
+                                    position: position,
+                                    type: "Palito DE",
+                                    semanticsLabel:
+                                        "Palito Diagonal à Esquerda",
+                                    size: _palitoSize);
+                                if (tempPalito.isPartiallyOffscreen(
+                                    screenWidth, screenHeight, context)) {
+                                  // if (!_isNarrationEnabled && !_palitoOffscreenAlertShown) {
+                                  if (!_isNarrationEnabled) {
+                                    // _palitoOffscreenAlertShown = true;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Semantics(
+                                          label: 'Alerta: Palito fora da tela.',
+                                          child: const Text(
+                                            "Não é possível adicionar um Palito fora da tela. Diminua o tamanho ou mude a posição.",
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return; 
+                                } else {
+                                  // _palitoOffscreenAlertShown = false;
+                                }
+
+                                palitoController.addPalito(
+                                    position,
+                                    "Palito DE",
+                                    "Palito Diagonal à Esquerda",
+                                    _palitoSize);
+                              },
+                            ),
+                            MenuButton(
+                              iconPath: 'assets/images/Palito H.png',
+                              label: "Palito H",
+                              tooltip: "Adicionar palito horizontal",
+                              semanticsLabel: "Palito Horizontal",
+                              onTap: () {
+                                final characterController =
+                                    Provider.of<CharacterController>(context,
+                                        listen: false);
+                                final palitoController =
+                                    Provider.of<PalitoController>(context,
+                                        listen: false);
+
+                                const double baseSize = 50;
+                                double baseOffsetX = 65;
+                                double baseOffsetY = -2;
+                                final sizeDiff = _palitoSize - baseSize;
+                                final offsetY =
+                                    baseOffsetY - (sizeDiff / 10) * 5;
+                                final Offset position = Offset(
+                                  characterController.xPosition + baseOffsetX,
+                                  characterController.yPosition + offsetY,
+                                );
+                                Palito tempPalito = Palito(
+                                    position: position,
+                                    type: "Palito H",
+                                    semanticsLabel: "Palito Horizontal",
+                                    size: _palitoSize);
+
+                                if (tempPalito.isPartiallyOffscreen(
+                                    screenWidth, screenHeight, context)) {
+                                  // if (!_isNarrationEnabled && !_palitoOffscreenAlertShown) {
+                                  if (!_isNarrationEnabled) {
+                                    // _palitoOffscreenAlertShown = true;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Semantics(
+                                          label: 'Alerta: Palito fora da tela.',
+                                          child: const Text(
+                                            "Não é possível adicionar um Palito fora da tela. Diminua o tamanho ou mude a posição.",
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  return; 
+                                } else {
+                                  // _palitoOffscreenAlertShown = false;
+                                }
+
+                                palitoController.addPalito(position, "Palito H",
+                                    "Palito Horizontal", _palitoSize);
+                              },
+                            ),
+
+                            const SizedBox(height: 10),
+                          ],
+                        ),
                       ),
                       if (_showJoystick)
                         Positioned(
@@ -1103,9 +1259,7 @@ class _MathsticksState extends State<Mathsticks> {
                                 textAlign: TextAlign.center,
                               ),
                             ),
-                            const SizedBox(
-                                height: 1),
-
+                            const SizedBox(height: 1),
                             Semantics(
                               label:
                                   'Logotipos dos apoiadores: IFSP, CNPQ e RUMO à Educação Matemática Inclusiva', // Descrição das imagens
@@ -1168,7 +1322,17 @@ class _MathsticksState extends State<Mathsticks> {
                     ],
                   ),
                 ),
+
                  ListTile(
+                  leading: const Icon(Icons.stop, color: Colors.blue),
+                  title: Semantics(
+                    label: 'Parar a história',
+                    button: true,
+                    child: const Text("Parar História"),
+                  ),
+                  onTap: stopStory, // Chama a função para parar
+                ),
+                ListTile(
                   title: Semantics(
                     label: 'Remover todos os palitos da tela',
                     button: true,
@@ -1177,14 +1341,12 @@ class _MathsticksState extends State<Mathsticks> {
                   leading: const Icon(Icons.delete, color: Colors.blue),
                   onTap: () {
                     Navigator.pop(context);
-                    palitoController
-                        .clearPalitos();
+                    palitoController.clearPalitos();
                   },
                 ),
                 SwitchListTile(
                   title: Semantics(
-                    label:
-                        'Botões de controle de movimentos', 
+                    label: 'Botões de controle de movimentos',
                     child: const Text("Joystick"),
                   ),
                   value: _showJoystick,
@@ -1198,7 +1360,6 @@ class _MathsticksState extends State<Mathsticks> {
                     color: Colors.blue,
                   ),
                 ),
-                
                 ListTile(
                   leading: const Icon(Icons.format_size, color: Colors.blue),
                   subtitle: Semantics(
@@ -1251,9 +1412,8 @@ class _MathsticksState extends State<Mathsticks> {
                     ),
                   ),
                 ),
-               
                 ListTile(
-                 leading: const Icon(Icons.numbers, color: Colors.blue), 
+                  leading: const Icon(Icons.numbers, color: Colors.blue),
                   title: Semantics(
                     label: 'Quantidade de palitos na tela $_palitoCount',
                     button: true,
@@ -1292,7 +1452,7 @@ class _MathsticksState extends State<Mathsticks> {
                   },
                 ),
                 ListTile(
-                   leading: const Icon(Icons.help_outline, color: Colors.blue),
+                  leading: const Icon(Icons.help_outline, color: Colors.blue),
                   title: Semantics(
                     label: 'Abrir a página de instruções de uso',
                     // button: true,
@@ -1308,7 +1468,7 @@ class _MathsticksState extends State<Mathsticks> {
                   },
                 ),
                 ListTile(
-                   leading: const Icon(Icons.handshake, color: Colors.blue),
+                  leading: const Icon(Icons.handshake, color: Colors.blue),
                   title: Semantics(
                     label: 'Abrir a página de agradecimentos',
                     // button: true,

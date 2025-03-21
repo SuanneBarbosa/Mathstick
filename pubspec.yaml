@@ -39,6 +39,7 @@ dependencies:
   flutter_joystick: ^0.2.1
   audioplayers: ^5.2.1
   just_audio: ^0.9.42
+  async: ^2.9.0
 
 dev_dependencies:
   flutter_test:

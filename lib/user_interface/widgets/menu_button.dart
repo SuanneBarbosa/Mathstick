@@ -32,7 +32,7 @@ class MenuButton extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 8),
                 padding: const EdgeInsets.all(1),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.white.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
                     BoxShadow(

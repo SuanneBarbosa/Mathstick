@@ -40,7 +40,7 @@ class ThankYouScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 10),
                       Text(
-                        "Celia Hoyles\nLulu Healy\nRichard Noss\nKauan Espósito da Conceição",
+                        "Celia Hoyles\nKauan Espósito da Conceição\nLulu Healy\nRichard Noss",
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18,
