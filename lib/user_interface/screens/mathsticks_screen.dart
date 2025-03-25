@@ -89,8 +89,7 @@ class _MathsticksState extends State<Mathsticks> {
     characterController.isHistoryMode = true;
     _executingStory = true;
 
-    bool borderAlertShown =
-        false; 
+    bool borderAlertShown = false;
 
     for (final actionSet in actionSets) {
       int repeatCount = actionSet['n'] as int;
@@ -99,28 +98,23 @@ class _MathsticksState extends State<Mathsticks> {
         for (StoryAction action in actions) {
           if (!_executingStory) break;
 
-          
           if (characterController.isAtAnyBorder() && !borderAlertShown) {
             stopStory();
-            String borderMessage =
-                characterController.getBorderHit(); 
+            String borderMessage = characterController.getBorderHit();
             WidgetsBinding.instance.addPostFrameCallback((_) {
-             
               announceForAccessibility(borderMessage, context);
 
-             
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(borderMessage),
                 ),
               );
             });
-            borderAlertShown = true; 
-            return; 
+            borderAlertShown = true;
+            return;
           }
           borderAlertShown = false;
 
-         
           bool anyPalitoOffscreen = false;
           for (Palito palito in palitoController.palitos) {
             if (palito.isPartiallyOffscreen(MediaQuery.of(context).size.width,
@@ -372,7 +366,7 @@ class _MathsticksState extends State<Mathsticks> {
         );
       });
       // }
-      return; 
+      return;
     } else {
       // _palitoOffscreenAlertShown = false;
     }
@@ -775,6 +769,7 @@ class _MathsticksState extends State<Mathsticks> {
                           child: ElevatedButton(
                             onPressed: () {
                               _executeActions();
+                              Navigator.pop(context);
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue,
@@ -989,8 +984,8 @@ class _MathsticksState extends State<Mathsticks> {
                                 }
                               },
                               child: Semantics(
-                                label: 'Personagem',
-                                image: true,
+                                label: 'Personagem. Beija-Flor',
+                                image: false,
                                 child: Image.asset(
                                   'assets/images/personagem.png',
                                   height: 70,
@@ -1245,11 +1240,11 @@ class _MathsticksState extends State<Mathsticks> {
                       ),
                       if (_showJoystick)
                         Positioned(
-                          bottom: 16,
-                          left: 0,
-                          right: 0,
+                         
+                          bottom: 10,
+                          right: 16,
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               JoystickButton(
                                 icon: Icons.arrow_left,
@@ -1326,7 +1321,7 @@ class _MathsticksState extends State<Mathsticks> {
                             const SizedBox(height: 1),
                             Semantics(
                               label:
-                                  'Logotipos dos apoiadores: IFSP, CNPQ e RUMO à Educação Matemática Inclusiva', // Descrição das imagens
+                                  'Logotipos dos apoiadores: IFSP, CNPQ e RUMO à Educação Matemática Inclusiva',
                               // image: true,
                               child: Container(
                                 padding: const EdgeInsets.all(10.0),
