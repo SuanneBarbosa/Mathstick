@@ -8,7 +8,13 @@ import '../../data/story_action.dart';
 import '../../services/audio_service.dart';
 import 'package:flutter/services.dart';
 import 'instruction_screen.dart';
+import 'about_screen.dart';
 import 'tanks_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb; 
+import '../widgets/grid_painter.dart';
+import '../../services/tts_service.dart';
+
+
 
 class DropdownOption {
   final String value;
@@ -34,6 +40,7 @@ class _MathsticksState extends State<Mathsticks> {
   final AudioService _audioService = AudioService();
   double _narrationSpeed = 1.0;
   bool _isNarrationEnabled = false;
+  final TtsService _ttsService = TtsService();
   DropdownOption? _selectedAction;
   final ScrollController _drawerScrollController = ScrollController();
   int _palitoCount = 0;
@@ -44,6 +51,7 @@ class _MathsticksState extends State<Mathsticks> {
   @override
   void dispose() {
     _audioService.dispose();
+    _ttsService.dispose();
     _drawerScrollController.dispose();
     super.dispose();
   }
@@ -52,7 +60,72 @@ class _MathsticksState extends State<Mathsticks> {
   void initState() {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    if (!kIsWeb) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _mostrarDialogoOrientacao(context);
+    });
   }
+  }
+
+
+  Future<void> _mostrarDialogoOrientacao(BuildContext context) async {
+  const String titulo = 'Aviso: Orientação do Dispositivo.';
+  const String conteudo =
+      'Antes de utilizar o aplicativo, posicione o celular na sua mão, em modo paisagem, girando no sentido anti-horário.';
+  const String acao = 'Toque no botão OK para fechar este aviso.';
+  
+  final String fullSemanticLabel = '$titulo $conteudo $acao';
+
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext dialogContext) {
+      return AlertDialog(
+        semanticLabel: fullSemanticLabel,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+
+       title: ExcludeSemantics(
+  child: const Text(
+    'Orientação do Dispositivo',
+    textAlign: TextAlign.center,
+  ),
+),
+
+        content: SingleChildScrollView(
+          child: Text(
+            conteudo,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 16),
+          ),
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+
+        actions: <Widget>[
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
+              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+             
+
+shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(8.0)),
+
+              
+            ),
+            child: const Text('OK'),
+            
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
 
   void updateStepSize() {
     final characterController =
@@ -62,6 +135,117 @@ class _MathsticksState extends State<Mathsticks> {
     });
   }
 
+String _getColumnLetter(int colIndex) {
+    return String.fromCharCode('A'.codeUnitAt(0) + colIndex);
+  }
+
+  // NOVA FUNÇÃO: Fornece uma descrição amigável do tipo de palito
+  String _getPalitoFriendlyDescription(String palitoType) {
+    switch (palitoType) {
+      case "Palito V":
+        return "vertical";
+      case "Palito H":
+        return "horizontal";
+      case "Palito DD":
+        return "diagonal para a direita";
+      case "Palito DE":
+        return "diagonal para a esquerda";
+      default:
+        return "desconhecido";
+    }
+  }
+
+  // // NOVA FUNÇÃO: Anuncia a localização de todos os palitos na grade
+  // Future<void> _announcePalitoLocations() async {
+  //   final palitoController = Provider.of<PalitoController>(context, listen: false);
+    
+  //   if (palitoController.palitos.isEmpty) {
+  //     await _ttsService.speak("Não há palitos na tela.");
+  //     return;
+  //   }
+
+  //   // A célula da grade terá o mesmo tamanho do passo do personagem
+  //   final double cellSize = _palitoSize;
+  //   final int numColumns = (MediaQuery.of(context).size.width / cellSize).floor();
+    
+  //   List<String> descriptions = [];
+  //   for (final palito in palitoController.palitos) {
+  //     // Usamos o centro do palito para determinar a célula, é mais preciso
+  //     final centerPosition = Offset(
+  //       palito.position.dx + palito.size / 2,
+  //       palito.position.dy + palito.size / 2,
+  //     );
+
+  //     final int col = (centerPosition.dx / cellSize).floor().clamp(0, numColumns - 1);
+  //     final int row = (centerPosition.dy / cellSize).floor();
+
+  //     final String colLetter = _getColumnLetter(col);
+  //     final int rowNum = row + 1; // Linhas começam em 1 para o usuário
+  //     final String palitoDesc = _getPalitoFriendlyDescription(palito.type);
+
+  //     descriptions.add("Na coluna $colLetter, linha $rowNum, um palito $palitoDesc.");
+  //   }
+    
+  //   final fullText = "Localização dos palitos: ${descriptions.join(' ')}";
+  //   await _ttsService.speak(fullText);
+  // }
+
+Future<void> _announcePalitoLocations() async {
+  // Linha de depuração para indicar que a função foi chamada
+  print('--- INICIANDO DEBUG DE LOCALIZAÇÃO DE PALITOS ---');
+
+  final palitoController = Provider.of<PalitoController>(context, listen: false);
+  
+  if (palitoController.palitos.isEmpty) {
+    print('Nenhum palito encontrado na tela.'); // Debug
+    await _ttsService.speak("Não há palitos na tela.");
+    print('--- FIM DO DEBUG ---');
+    return;
+  }
+
+  final double cellSize = _palitoSize;
+  final screenWidth = MediaQuery.of(context).size.width;
+  final int numColumns = (screenWidth / cellSize).floor();
+  
+  print('Tamanho da Célula (Grade): $cellSize'); // Debug
+  print('Largura da Tela: $screenWidth'); // Debug
+  print('Número de Colunas: $numColumns'); // Debug
+
+  List<String> descriptions = [];
+  int palitoIndex = 0; // Contador para facilitar a identificação no log
+  for (final palito in palitoController.palitos) {
+    palitoIndex++;
+    final centerPosition = Offset(
+      palito.position.dx + palito.size / 2,
+      palito.position.dy + palito.size / 2,
+    );
+
+    final int col = (centerPosition.dx / cellSize).floor().clamp(0, numColumns - 1);
+    final int row = (centerPosition.dy / cellSize).floor();
+
+    final String colLetter = _getColumnLetter(col);
+    final int rowNum = row + 1;
+    final String palitoDesc = _getPalitoFriendlyDescription(palito.type);
+
+    // Linhas de depuração detalhadas para cada palito
+    print('--- Palito $palitoIndex (${palito.type}) ---');
+    print('  Posição Bruta (x,y): (${palito.position.dx.toStringAsFixed(2)}, ${palito.position.dy.toStringAsFixed(2)})');
+    print('  Posição do Centro (x,y): (${centerPosition.dx.toStringAsFixed(2)}, ${centerPosition.dy.toStringAsFixed(2)})');
+    print('  Índice da Coluna (cru): ${(centerPosition.dx / cellSize).toStringAsFixed(2)} -> Coluna: $col');
+    print('  Índice da Linha (cru): ${(centerPosition.dy / cellSize).toStringAsFixed(2)} -> Linha: $row');
+    print('  Coordenada Final: $colLetter$rowNum');
+    
+    descriptions.add("Na coluna $colLetter, linha $rowNum, um palito $palitoDesc.");
+  }
+  
+  final fullText = "Localização dos palitos: ${descriptions.join(' ')}";
+  
+  print('--- Texto Final para TTS ---');
+  print(fullText);
+  print('--- FIM DO DEBUG ---');
+  
+  await _ttsService.speak(fullText);
+}
   void announceForAccessibility(String message, BuildContext context) {
     final overlay = Overlay.of(context);
     final entry = OverlayEntry(
@@ -816,17 +1000,28 @@ class _MathsticksState extends State<Mathsticks> {
 
         controller.setScreenSize(screenWidth, screenHeight);
 
+        final double cellSize = _palitoSize;
+        final int numColumns = (screenWidth / cellSize).floor();
+        final int numRows = (screenHeight / cellSize).floor();
+
         return Scaffold(
+       
           body: Container(
             width: screenWidth,
             height: screenHeight,
+             
             color: const Color.fromRGBO(220, 247, 255, 1.0),
             child: Column(
-              // mainAxisSize: MainAxisSize.min,
+             
+              
               crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
-                Builder(
+                Container(
+                  color: Colors.white, 
+                  width: double.infinity, 
+                  alignment: Alignment.centerLeft,
+                  child:  Builder(
                   builder: (context) {
                     return Semantics(
                       label: 'Abrir menu de navegação',
@@ -840,10 +1035,21 @@ class _MathsticksState extends State<Mathsticks> {
                       ),
                     );
                   },
-                ),
+                ),),
+               const SizedBox(height: 5.0),
+               
                 Expanded(
                   child: Stack(
                     children: [
+                       Positioned.fill(
+                        child: CustomPaint(
+                          painter: GridPainter(
+                            numColumns: numColumns,
+                            numRows: numRows,
+                            cellSize: cellSize,
+                          ),
+                        ),
+                      ),
                       Consumer<PalitoController>(
                         builder: (context, palitoController, child) {
                           palitoController.checkAllPalitosOffscreen(
@@ -983,14 +1189,29 @@ class _MathsticksState extends State<Mathsticks> {
                                   }
                                 }
                               },
-                              child: Semantics(
-                                label: 'Personagem. Beija-Flor',
-                                image: false,
-                                child: Image.asset(
-                                  'assets/images/personagem.png',
-                                  height: 70,
-                                  fit: BoxFit.contain,
-                                ),
+                              onPanEnd: (details) {
+    // Quando o usuário solta o dedo, alinhamos o personagem à grade.
+    controller.snapToGrid(); // Você precisará tornar _snapToGrid pública (snapToGrid)
+  },
+                              child: Container(
+      // PASSO 2: Use `decoration` para adicionar cor e forma.
+      decoration: BoxDecoration(
+        // Defina a cor de fundo que você deseja.
+        color: Colors.yellow.withOpacity(0.5), 
+        
+        // Defina a forma do fundo. Um círculo fica visualmente bom.
+        shape: BoxShape.rectangle, 
+      ),
+      
+      // Adicione um pouco de padding para que o beija-flor não fique colado nas bordas do círculo.
+      // padding: const EdgeInsets.all(8.0), 
+      
+      // PASSO 3: O filho do Container é a sua Imagem original.
+      child: Image.asset(
+        'assets/images/personagem.png',
+        height: 70, // A altura aqui controla o tamanho da imagem interna
+        fit: BoxFit.contain,
+      ),
                               ),
                             ),
                           );
@@ -1284,6 +1505,7 @@ class _MathsticksState extends State<Mathsticks> {
                     ],
                   ),
                 ),
+               
               ],
             ),
           ),
@@ -1410,6 +1632,19 @@ class _MathsticksState extends State<Mathsticks> {
                   ),
                 ),
                 ListTile(
+                  leading: const Icon(Icons.grid_on, color: Colors.blue),
+                  title: const Text("Localizar Palitos"),
+                  onTap: () {
+                    Navigator.pop(context);
+
+    // 2. Agenda a chamada do TTS para DEPOIS que o próximo frame for renderizado.
+    // Isso garante que a UI (e a ponte de comunicação do plugin) esteja estável.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _announcePalitoLocations();
+    });
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.format_size, color: Colors.blue),
                   subtitle: Semantics(
                     label:
@@ -1424,6 +1659,14 @@ class _MathsticksState extends State<Mathsticks> {
                             divisions: 7,
                             label: 'Tamanho do Palito',
                             onChanged: (double value) {
+                               final characterController = Provider.of<CharacterController>(context, listen: false);
+  final palitoController = Provider.of<PalitoController>(context, listen: false);
+
+  // 2. Limpa todos os palitos da tela
+  palitoController.clearPalitos();
+
+  // 3. Reseta a posição do beija-flor para o centro
+  characterController.resetPosition();
                               setState(() {
                                 _palitoSize = value;
                                 characterController.setStepSize(value);
@@ -1516,6 +1759,21 @@ class _MathsticksState extends State<Mathsticks> {
                     );
                   },
                 ),
+                ListTile(
+              leading: const Icon(Icons.info_outline, color: Colors.blue),
+              title: Semantics(
+                label: 'Abrir a página de informações sobre o aplicativo',
+                child: const Text("Sobre"),
+              ),
+              onTap: () {
+                Navigator.pop(context); // Fecha o drawer antes de navegar
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const AboutScreen()),
+                );
+              },
+            ),
                 ListTile(
                   leading: const Icon(Icons.handshake, color: Colors.blue),
                   title: Semantics(
