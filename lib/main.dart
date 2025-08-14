@@ -3,17 +3,18 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'services/character_service.dart';
 import 'services/palito_service.dart';
-import 'user_interface/screens/mathsticks_screen.dart';
+import 'user_interface/screens/splash_screen.dart'; 
+import 'package:flutter/foundation.dart';
 
-void main() {
- WidgetsFlutterBinding.ensureInitialized();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
-
-
+ if (!kIsWeb) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
   runApp(const Main());
 }
 
@@ -29,7 +30,7 @@ class Main extends StatelessWidget {
       ],
       child: const MaterialApp(
         title: 'Mathsticks',
-        home: Mathsticks(),
+        home: SplashScreen(),
       ),
     );
   }

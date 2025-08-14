@@ -74,6 +74,45 @@ class PalitoController extends ChangeNotifier {
   final Map<Palito, Set<String>> _edgesAlertedForPalito = {};
 
   List<Palito> get palitos => _palitos;
+  
+  Offset getPositionForNewPalito(String palitoType, Offset characterPosition, double palitoSize) {
+    const double baseSize = 50.0;
+    final sizeDiff = palitoSize - baseSize;
+    double baseOffsetX = 0, baseOffsetY = 0;
+    double finalOffsetX = 0, finalOffsetY = 0;
+
+    switch (palitoType) {
+      case "Palito V":
+        baseOffsetX = 24;
+        baseOffsetY = -50;
+        finalOffsetX = baseOffsetX + (sizeDiff / 10) * 5;
+        finalOffsetY = baseOffsetY - (sizeDiff / 10) * 10;
+        break;
+      case "Palito DD":
+        baseOffsetX = 36;
+        baseOffsetY = -45;
+        finalOffsetX = baseOffsetX + (sizeDiff / 10) * 7;
+        finalOffsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
+        break;
+      case "Palito DE":
+        baseOffsetX = 13;
+        baseOffsetY = -45;
+        finalOffsetX = baseOffsetX + (sizeDiff / 10) * 3;
+        finalOffsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
+        break;
+      case "Palito H":
+        baseOffsetX = 48;
+        baseOffsetY = -27;
+        finalOffsetX = baseOffsetX + sizeDiff;
+        finalOffsetY = baseOffsetY - (sizeDiff / 10) * 5;
+        break;
+    }
+
+    return Offset(
+      characterPosition.dx + finalOffsetX,
+      characterPosition.dy + finalOffsetY,
+    );
+  }
 
   
   void addPalito(

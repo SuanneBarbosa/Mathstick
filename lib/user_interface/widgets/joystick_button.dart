@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 
 class JoystickButton extends StatelessWidget {
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String tooltip;
   final String semanticsLabel;
 
   const JoystickButton({
     super.key,
     required this.icon,
-    required this.onPressed,
+    this.onPressed,
     required this.tooltip,
     required this.semanticsLabel,
   });

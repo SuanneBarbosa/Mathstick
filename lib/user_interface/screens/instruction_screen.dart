@@ -69,7 +69,33 @@ class InstructionsScreen extends StatelessWidget {
               semanticsDescription:
                   'Use a opção "Contador de Palitos" no menu lateral.',
             ),
-            
+            _buildInstructionItem(
+              title: 'Narração',
+              description:
+                  'Ative o interruptor \'Narração\' na barra superior para receber feedback por voz. Quando ativada, a narração informa: (1) a posição do personagem (linha e coluna) a cada salto; (2) a localização de um palito recém-adicionado; (3) cada ação executada durante a criação de uma história; e (4) a posição do personagem ao tocar sobre ele.',
+              semanticsDescription:
+                  'Ative "Narração" para ouvir posição do personagem, localização de palitos e ações da história.',
+            ),
+             _buildInstructionItem(
+              title: 'Salto Automático',
+              description:
+                  'Ative o interruptor \'Salto Automático\' na barra superior para que o personagem salte automaticamente após cada palito adicionado exceto com o Palito Diagonal à Esquerda. Mapeamento dos saltos: Palito Horizontal → salta para direita; Palito Vertical → salta para cima; Palito Diagonal à Direita → salta para direita; Palito Diagonal à Esquerda → não salta.',
+              semanticsDescription:
+                  'Ative "Salto Automático" para saltar após adicionar palitos (H: direita, V: cima, DD: direita; DE: sem salto).',
+            ),
+             _buildInstructionItem(
+              title: 'Localizar Palitos',
+              description:
+                  'No menu lateral, toque na opção \'Localizar Palitos\'. O aplicativo narrará a posição (coluna e linha) de todos os palitos que estão atualmente na tela.',
+              semanticsDescription:
+                  'Use a opção "Localizar Palitos" no menu lateral para ouvir a localização de todos os palitos na tela.',
+            ),
+            _buildInstructionItem(
+              title: 'Sair',
+              description:
+                  'Na barra superior, toque em \'Sair\' para fechar o aplicativo.',
+              semanticsDescription: 'Toque em "Sair" para fechar o aplicativo.',
+            ), 
           ],
         ),
       ),

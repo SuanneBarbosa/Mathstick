@@ -8,9 +8,7 @@ class TtsService {
   }
 
   void _initTts() async {
-    // Configura o idioma para Português do Brasil
     await _flutterTts.setLanguage("pt-BR");
-    // Ajusta a velocidade da fala para ser um pouco mais lenta que o padrão
     await _flutterTts.setSpeechRate(0.5);
     await _flutterTts.setPitch(1.0);
   }

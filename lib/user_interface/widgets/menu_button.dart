@@ -6,6 +6,7 @@ class MenuButton extends StatelessWidget {
   final String tooltip;
   final String semanticsLabel;
   final VoidCallback onTap;
+   final double iconSize; 
 
   const MenuButton({
     super.key,
@@ -14,6 +15,7 @@ class MenuButton extends StatelessWidget {
     required this.tooltip,
     required this.onTap, 
     required this.semanticsLabel,
+     this.iconSize = 50.0,
   });
 
   @override
@@ -25,6 +27,7 @@ class MenuButton extends StatelessWidget {
         message: tooltip,
         child: GestureDetector(
           onTap: onTap,
+           behavior: HitTestBehavior.opaque,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -44,7 +47,7 @@ class MenuButton extends StatelessWidget {
                 ),
                 child: Image.asset(
                   iconPath,
-                  height: 50,
+                   height: 50, 
                   fit: BoxFit.contain,
                 ),
               ),

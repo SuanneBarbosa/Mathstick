@@ -29,7 +29,6 @@ class ActionButton extends StatelessWidget {
           type: type,
           direction: type == StoryActionType.move ? value : null,
           palitoType: type == StoryActionType.palito ? value : null,
-          // size: palitoSize,
           getActionLabel: getActionLabel,
         );
         onActionAdded(newAction); 

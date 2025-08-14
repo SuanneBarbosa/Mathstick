@@ -9,12 +9,10 @@ import '../../services/audio_service.dart';
 import 'package:flutter/services.dart';
 import 'instruction_screen.dart';
 import 'about_screen.dart';
-import 'tanks_screen.dart';
-import 'package:flutter/foundation.dart' show kIsWeb; 
+import 'thanks_screen.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../widgets/grid_painter.dart';
 import '../../services/tts_service.dart';
-
-
 
 class DropdownOption {
   final String value;
@@ -47,6 +45,7 @@ class _MathsticksState extends State<Mathsticks> {
   bool _showCount = false;
   final ScrollController _scrollController = ScrollController();
   bool _executingStory = false;
+  bool _isAutoCompleteJumpEnabled = false;
 
   @override
   void dispose() {
@@ -61,71 +60,69 @@ class _MathsticksState extends State<Mathsticks> {
     super.initState();
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     if (!kIsWeb) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _mostrarDialogoOrientacao(context);
-    });
-  }
+      WidgetsBinding.instance.addPostFrameCallback((_) {});
+    }
   }
 
-
-  Future<void> _mostrarDialogoOrientacao(BuildContext context) async {
-  const String titulo = 'Aviso: Orientação do Dispositivo.';
-  const String conteudo =
-      'Antes de utilizar o aplicativo, posicione o celular na sua mão, em modo paisagem, girando no sentido anti-horário.';
-  const String acao = 'Toque no botão OK para fechar este aviso.';
-  
-  final String fullSemanticLabel = '$titulo $conteudo $acao';
-
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext dialogContext) {
-      return AlertDialog(
-        semanticLabel: fullSemanticLabel,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15.0),
-        ),
-
-       title: ExcludeSemantics(
-  child: const Text(
-    'Orientação do Dispositivo',
-    textAlign: TextAlign.center,
-  ),
-),
-
-        content: SingleChildScrollView(
-          child: Text(
-            conteudo,
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16),
-          ),
-        ),
-        actionsAlignment: MainAxisAlignment.center,
-
-        actions: <Widget>[
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 10),
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-             
-
-shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8.0)),
-
-              
+  Future<void> _showExitConfirmationDialog(BuildContext context) async {
+    final bool? shouldExit = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Center(
+            child: Semantics(
+              child: const Text(
+                "Confirmar Saída",
+                style: TextStyle(fontSize: 18),
+              ),
             ),
-            child: const Text('OK'),
-            
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-            },
           ),
-        ],
-      );
-    },
-  );
-}
+          content: const Text(
+            "Tem certeza de que deseja fechar o aplicativo?",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16),
+          ),
+          actionsAlignment: MainAxisAlignment.center,
+          actions: <Widget>[
+            Semantics(
+              label: 'Cancelar',
+              button: true,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: const Text("Cancelar"),
+              ),
+            ),
+            Semantics(
+              label: 'Fechar',
+              button: true,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(dialogContext).pop(true);
+                },
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: const Text("Fechar"),
+              ),
+            ),
+          ],
+        );
+      },
+    );
 
+    if (shouldExit == true) {
+      SystemNavigator.pop();
+    }
+  }
 
   void updateStepSize() {
     final characterController =
@@ -135,11 +132,10 @@ shape: RoundedRectangleBorder(
     });
   }
 
-String _getColumnLetter(int colIndex) {
+  String _getColumnLetter(int colIndex) {
     return String.fromCharCode('A'.codeUnitAt(0) + colIndex);
   }
 
-  // NOVA FUNÇÃO: Fornece uma descrição amigável do tipo de palito
   String _getPalitoFriendlyDescription(String palitoType) {
     switch (palitoType) {
       case "Palito V":
@@ -155,97 +151,149 @@ String _getColumnLetter(int colIndex) {
     }
   }
 
-  // // NOVA FUNÇÃO: Anuncia a localização de todos os palitos na grade
-  // Future<void> _announcePalitoLocations() async {
-  //   final palitoController = Provider.of<PalitoController>(context, listen: false);
-    
-  //   if (palitoController.palitos.isEmpty) {
-  //     await _ttsService.speak("Não há palitos na tela.");
-  //     return;
-  //   }
+  Future<void> _announcePalitoLocations() async {
+    final palitoController =
+        Provider.of<PalitoController>(context, listen: false);
 
-  //   // A célula da grade terá o mesmo tamanho do passo do personagem
-  //   final double cellSize = _palitoSize;
-  //   final int numColumns = (MediaQuery.of(context).size.width / cellSize).floor();
-    
-  //   List<String> descriptions = [];
-  //   for (final palito in palitoController.palitos) {
-  //     // Usamos o centro do palito para determinar a célula, é mais preciso
-  //     final centerPosition = Offset(
-  //       palito.position.dx + palito.size / 2,
-  //       palito.position.dy + palito.size / 2,
-  //     );
+    if (palitoController.palitos.isEmpty) {
+      await _ttsService.speak("Não há palitos na tela.");
+      return;
+    }
 
-  //     final int col = (centerPosition.dx / cellSize).floor().clamp(0, numColumns - 1);
-  //     final int row = (centerPosition.dy / cellSize).floor();
+    final double cellSize = _palitoSize;
+    final int numColumns =
+        (MediaQuery.of(context).size.width / cellSize).floor();
 
-  //     final String colLetter = _getColumnLetter(col);
-  //     final int rowNum = row + 1; // Linhas começam em 1 para o usuário
-  //     final String palitoDesc = _getPalitoFriendlyDescription(palito.type);
+    List<String> descriptions = [];
+    for (final palito in palitoController.palitos) {
+      final centerPosition = Offset(
+        palito.position.dx + palito.size / 2,
+        palito.position.dy + palito.size / 2,
+      );
 
-  //     descriptions.add("Na coluna $colLetter, linha $rowNum, um palito $palitoDesc.");
-  //   }
-    
-  //   final fullText = "Localização dos palitos: ${descriptions.join(' ')}";
-  //   await _ttsService.speak(fullText);
-  // }
+      final int col =
+          (centerPosition.dx / cellSize).floor().clamp(0, numColumns - 1);
+      final int row = (centerPosition.dy / cellSize).floor();
 
-Future<void> _announcePalitoLocations() async {
-  // Linha de depuração para indicar que a função foi chamada
-  print('--- INICIANDO DEBUG DE LOCALIZAÇÃO DE PALITOS ---');
+      final String colLetter = _getColumnLetter(col);
+      final int rowNum = row + 1;
+      final String palitoDesc = _getPalitoFriendlyDescription(palito.type);
 
-  final palitoController = Provider.of<PalitoController>(context, listen: false);
-  
-  if (palitoController.palitos.isEmpty) {
-    print('Nenhum palito encontrado na tela.'); // Debug
-    await _ttsService.speak("Não há palitos na tela.");
-    print('--- FIM DO DEBUG ---');
-    return;
+      descriptions
+          .add("Na coluna $colLetter, linha $rowNum, um palito $palitoDesc.");
+    }
+
+    final fullText = "Localização dos palitos: ${descriptions.join(' ')}";
+    await _ttsService.speak(fullText);
   }
 
-  final double cellSize = _palitoSize;
-  final screenWidth = MediaQuery.of(context).size.width;
-  final int numColumns = (screenWidth / cellSize).floor();
-  
-  print('Tamanho da Célula (Grade): $cellSize'); // Debug
-  print('Largura da Tela: $screenWidth'); // Debug
-  print('Número de Colunas: $numColumns'); // Debug
+  Future<void> _announceNextPalitoLocation() async {
+    if (!mounted) return;
 
-  List<String> descriptions = [];
-  int palitoIndex = 0; // Contador para facilitar a identificação no log
-  for (final palito in palitoController.palitos) {
-    palitoIndex++;
+    final characterController =
+        Provider.of<CharacterController>(context, listen: false);
+
+    const double baseSize = 50;
+    const double baseOffsetX = 48;
+    const double baseOffsetY = -27;
+
+    final sizeDiff = _palitoSize - baseSize;
+    final offsetX = baseOffsetX + sizeDiff;
+    final offsetY = baseOffsetY - (sizeDiff / 10) * 5;
+
+    final simulatedPosition = Offset(
+      characterController.xPosition + offsetX,
+      characterController.yPosition + offsetY,
+    );
+
+    final simulatedPalitoSize = _palitoSize;
+    final double cellSize = _palitoSize;
+    if (cellSize <= 0) return;
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final int numColumns = (screenWidth / cellSize).floor();
+    final centerPosition = Offset(
+      simulatedPosition.dx + simulatedPalitoSize / 2,
+      simulatedPosition.dy + simulatedPalitoSize / 2,
+    );
+
+    final int col =
+        (centerPosition.dx / cellSize).floor().clamp(0, numColumns - 1);
+    final int row = (centerPosition.dy / cellSize).floor();
+
+    final String colLetter = _getColumnLetter(col);
+    final int rowNum = row + 1;
+    final String message =
+        "O personagem saltou para coluna $colLetter, linha $rowNum.";
+    await _ttsService.speak(message);
+  }
+
+  Future<void> _announceLocation() async {
+    if (!mounted) return;
+
+    final characterController =
+        Provider.of<CharacterController>(context, listen: false);
+
+    const double baseSize = 50;
+    const double baseOffsetX = 48;
+    const double baseOffsetY = -27;
+
+    final sizeDiff = _palitoSize - baseSize;
+    final offsetX = baseOffsetX + sizeDiff;
+    final offsetY = baseOffsetY - (sizeDiff / 10) * 5;
+    final simulatedPosition = Offset(
+      characterController.xPosition + offsetX,
+      characterController.yPosition + offsetY,
+    );
+
+    final simulatedPalitoSize = _palitoSize;
+    final double cellSize = _palitoSize;
+    if (cellSize <= 0) return;
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final int numColumns = (screenWidth / cellSize).floor();
+    final centerPosition = Offset(
+      simulatedPosition.dx + simulatedPalitoSize / 2,
+      simulatedPosition.dy + simulatedPalitoSize / 2,
+    );
+
+    final int col =
+        (centerPosition.dx / cellSize).floor().clamp(0, numColumns - 1);
+    final int row = (centerPosition.dy / cellSize).floor();
+
+    final String colLetter = _getColumnLetter(col);
+    final int rowNum = row + 1;
+    final String message =
+        "O personagem está na coluna $colLetter, linha $rowNum.";
+    await _ttsService.speak(message);
+  }
+
+  Future<void> _announceNewPalitoLocation(Palito palito) async {
+    if (!mounted) return;
+
+    final double cellSize = _palitoSize;
+    if (cellSize <= 0) return;
+
+    final screenWidth = MediaQuery.of(context).size.width;
+    final int numColumns = (screenWidth / cellSize).floor();
     final centerPosition = Offset(
       palito.position.dx + palito.size / 2,
       palito.position.dy + palito.size / 2,
     );
 
-    final int col = (centerPosition.dx / cellSize).floor().clamp(0, numColumns - 1);
+    final int col =
+        (centerPosition.dx / cellSize).floor().clamp(0, numColumns - 1);
     final int row = (centerPosition.dy / cellSize).floor();
 
     final String colLetter = _getColumnLetter(col);
     final int rowNum = row + 1;
     final String palitoDesc = _getPalitoFriendlyDescription(palito.type);
 
-    // Linhas de depuração detalhadas para cada palito
-    print('--- Palito $palitoIndex (${palito.type}) ---');
-    print('  Posição Bruta (x,y): (${palito.position.dx.toStringAsFixed(2)}, ${palito.position.dy.toStringAsFixed(2)})');
-    print('  Posição do Centro (x,y): (${centerPosition.dx.toStringAsFixed(2)}, ${centerPosition.dy.toStringAsFixed(2)})');
-    print('  Índice da Coluna (cru): ${(centerPosition.dx / cellSize).toStringAsFixed(2)} -> Coluna: $col');
-    print('  Índice da Linha (cru): ${(centerPosition.dy / cellSize).toStringAsFixed(2)} -> Linha: $row');
-    print('  Coordenada Final: $colLetter$rowNum');
-    
-    descriptions.add("Na coluna $colLetter, linha $rowNum, um palito $palitoDesc.");
+    final String message =
+        "Um palito $palitoDesc foi adicionado na coluna $colLetter, linha $rowNum.";
+    await _ttsService.speak(message);
   }
-  
-  final fullText = "Localização dos palitos: ${descriptions.join(' ')}";
-  
-  print('--- Texto Final para TTS ---');
-  print(fullText);
-  print('--- FIM DO DEBUG ---');
-  
-  await _ttsService.speak(fullText);
-}
+
   void announceForAccessibility(String message, BuildContext context) {
     final overlay = Overlay.of(context);
     final entry = OverlayEntry(
@@ -268,12 +316,10 @@ Future<void> _announcePalitoLocations() async {
   Future<void> _executeActions() async {
     final characterController =
         Provider.of<CharacterController>(context, listen: false);
-    final palitoController =
-        Provider.of<PalitoController>(context, listen: false);
+    // final palitoController =
+    //     Provider.of<PalitoController>(context, listen: false);
     characterController.isHistoryMode = true;
     _executingStory = true;
-
-    bool borderAlertShown = false;
 
     for (final actionSet in actionSets) {
       int repeatCount = actionSet['n'] as int;
@@ -282,51 +328,24 @@ Future<void> _announcePalitoLocations() async {
         for (StoryAction action in actions) {
           if (!_executingStory) break;
 
-          if (characterController.isAtAnyBorder() && !borderAlertShown) {
-            stopStory();
-            String borderMessage = characterController.getBorderHit();
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              announceForAccessibility(borderMessage, context);
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(borderMessage),
-                ),
-              );
-            });
-            borderAlertShown = true;
-            return;
-          }
-          borderAlertShown = false;
-
-          bool anyPalitoOffscreen = false;
-          for (Palito palito in palitoController.palitos) {
-            if (palito.isPartiallyOffscreen(MediaQuery.of(context).size.width,
-                MediaQuery.of(context).size.height, context)) {
-              anyPalitoOffscreen = true;
-              break;
-            }
-          }
-
-          if (anyPalitoOffscreen) {
-            stopStory();
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Semantics(
-                    label: 'Alerta: Palito fora da tela.',
-                    child: const Text(
-                      "Um palito está parcialmente fora da tela. A história foi interrompida.",
-                    ),
-                  ),
-                ),
-              );
-            });
-            return;
-          }
-
           if (action.type == StoryActionType.move) {
-            await _moveCharacter(action.direction!);
+            final bool moveSuccessful = await _moveCharacter(action.direction!);
+            if (!moveSuccessful) {
+              stopStory();
+              const String borderMessage =
+                  "Você atingiu a borda! A história não pode continuar.";
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                announceForAccessibility(borderMessage, context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(borderMessage),
+                  ),
+                );
+              });
+              characterController.isHistoryMode = false;
+              _executingStory = false;
+              return;
+            }
           } else {
             await _addPalito(context, action);
           }
@@ -397,12 +416,14 @@ Future<void> _announcePalitoLocations() async {
     return _actionLabels[actionValue] ?? actionValue;
   }
 
-  Future<void> _moveCharacter(String direction) async {
+  Future<bool> _moveCharacter(String direction) async {
     final characterController =
         Provider.of<CharacterController>(context, listen: false);
+    bool moveWasSuccessful = false;
+
     switch (direction) {
       case 'Cima':
-        characterController.moveUp();
+        moveWasSuccessful = characterController.moveUp();
         if (_isNarrationEnabled) {
           await _audioService.playAudio(
             'assets/sounds/cima.mp3',
@@ -411,7 +432,7 @@ Future<void> _announcePalitoLocations() async {
         }
         break;
       case 'Baixo':
-        characterController.moveDown();
+        moveWasSuccessful = characterController.moveDown();
         if (_isNarrationEnabled) {
           await _audioService.playAudio(
             'assets/sounds/baixo.mp3',
@@ -420,7 +441,7 @@ Future<void> _announcePalitoLocations() async {
         }
         break;
       case 'Esquerda':
-        characterController.moveLeft();
+        moveWasSuccessful = characterController.moveLeft();
         if (_isNarrationEnabled) {
           await _audioService.playAudio(
             'assets/sounds/esquerda.mp3',
@@ -429,7 +450,7 @@ Future<void> _announcePalitoLocations() async {
         }
         break;
       case 'Direita':
-        characterController.moveRight();
+        moveWasSuccessful = characterController.moveRight();
         if (_isNarrationEnabled) {
           await _audioService.playAudio(
             'assets/sounds/direita.mp3',
@@ -438,6 +459,7 @@ Future<void> _announcePalitoLocations() async {
         }
         break;
     }
+    return moveWasSuccessful;
   }
 
   Future<void> _addPalito(BuildContext context, StoryAction action) async {
@@ -455,8 +477,8 @@ Future<void> _announcePalitoLocations() async {
 
     switch (action.palitoType) {
       case "Palito V":
-        baseOffsetX = 40;
-        baseOffsetY = -25;
+        baseOffsetX = 24;
+        baseOffsetY = -50;
         if (_isNarrationEnabled) {
           await _audioService.playAudio(
             'assets/sounds/palitoVertical.mp3',
@@ -465,8 +487,8 @@ Future<void> _announcePalitoLocations() async {
         }
         break;
       case "Palito DD":
-        baseOffsetX = 52;
-        baseOffsetY = -25;
+        baseOffsetX = 36;
+        baseOffsetY = -45;
         if (_isNarrationEnabled) {
           await _audioService.playAudio(
             'assets/sounds/palitoDiagonalDireita.mp3',
@@ -475,8 +497,8 @@ Future<void> _announcePalitoLocations() async {
         }
         break;
       case "Palito DE":
-        baseOffsetX = 27;
-        baseOffsetY = -25;
+        baseOffsetX = 13;
+        baseOffsetY = -45;
         if (_isNarrationEnabled) {
           await _audioService.playAudio(
             'assets/sounds/palitoDiagonalEsquerda.mp3',
@@ -485,8 +507,9 @@ Future<void> _announcePalitoLocations() async {
         }
         break;
       case "Palito H":
-        baseOffsetX = 65;
-        baseOffsetY = -2;
+        baseOffsetX = 48;
+        baseOffsetY = -27;
+
         if (_isNarrationEnabled) {
           await _audioService.playAudio(
             'assets/sounds/palitoHorizontal.mp3',
@@ -504,20 +527,22 @@ Future<void> _announcePalitoLocations() async {
 
     switch (action.palitoType) {
       case "Palito V":
-        offsetX = 40 - (sizeDiff / 10) * 5;
-        offsetY = -25 - (sizeDiff / 10) * 10;
+        offsetX = baseOffsetX + (sizeDiff / 10) * 5;
+        offsetY = baseOffsetY - (sizeDiff / 10) * 10;
         break;
       case "Palito H":
-        offsetY = -2 - (sizeDiff / 10) * 5;
-        offsetX = 65;
+        offsetX = baseOffsetX + sizeDiff;
+        offsetY = baseOffsetY - (sizeDiff / 10) * 5;
+
         break;
       case "Palito DD":
-        offsetX = 52 - (sizeDiff / 10) * 3;
-        offsetY = -25 - (sizeDiff / 10) * 9.5;
+        offsetX = baseOffsetX + (sizeDiff / 10) * 7;
+        offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
+
         break;
       case "Palito DE":
-        offsetX = 27 - (sizeDiff / 10) * 6;
-        offsetY = -25 - (sizeDiff / 10) * 9.5;
+        offsetX = baseOffsetX + (sizeDiff / 10) * 3;
+        offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
         break;
     }
 
@@ -533,9 +558,6 @@ Future<void> _announcePalitoLocations() async {
         size: _palitoSize);
 
     if (tempPalito.isPartiallyOffscreen(screenWidth, screenHeight, context)) {
-      // if (!_isNarrationEnabled && !_palitoOffscreenAlertShown) {
-      // if (!_isNarrationEnabled) {
-      // _palitoOffscreenAlertShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         stopStory();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -551,9 +573,7 @@ Future<void> _announcePalitoLocations() async {
       });
       // }
       return;
-    } else {
-      // _palitoOffscreenAlertShown = false;
-    }
+    } else {}
     palitoController.addPalito(
         position, action.palitoType!, action.palitoType!, _palitoSize);
   }
@@ -576,18 +596,12 @@ Future<void> _announcePalitoLocations() async {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Colors.white.withOpacity(0.8),
-
-          // title: const Center(child: Text("Selecione as ações:")),
           content: StatefulBuilder(
             builder: (context, setState) {
               return SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Scrollbar(
-                    //   thumbVisibility: true,
-                    //   controller: _scrollController,
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -930,23 +944,6 @@ Future<void> _announcePalitoLocations() async {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Row(
-                          children: [
-                            const Text("Narração"),
-                            Semantics(
-                              label: 'Ativar/desativar narração',
-                              toggled: _isNarrationEnabled,
-                              child: Switch(
-                                value: _isNarrationEnabled,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _isNarrationEnabled = value;
-                                  });
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
                         Semantics(
                           label: 'Executar ações da história',
                           button: true,
@@ -1005,43 +1002,120 @@ Future<void> _announcePalitoLocations() async {
         final int numRows = (screenHeight / cellSize).floor();
 
         return Scaffold(
-       
           body: Container(
             width: screenWidth,
             height: screenHeight,
-             
             color: const Color.fromRGBO(220, 247, 255, 1.0),
             child: Column(
-             
-              
               crossAxisAlignment: CrossAxisAlignment.start,
-
               children: [
                 Container(
-                  color: Colors.white, 
-                  width: double.infinity, 
-                  alignment: Alignment.centerLeft,
-                  child:  Builder(
-                  builder: (context) {
-                    return Semantics(
-                      label: 'Abrir menu de navegação',
-                      button: true,
-                      child: IconButton(
-                        icon: const Icon(Icons.menu, color: Colors.blue),
-                        tooltip: "Abrir menu",
-                        onPressed: () {
-                          Scaffold.of(context).openDrawer();
+                  color: Colors.white,
+                  width: double.infinity,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Builder(
+                        builder: (context) {
+                          return Semantics(
+                            label: 'Abrir menu de navegação',
+                            button: true,
+                            child: IconButton(
+                              icon: const Icon(Icons.menu, color: Colors.blue),
+                              tooltip: "Abrir menu",
+                              onPressed: () {
+                                Scaffold.of(context).openDrawer();
+                              },
+                            ),
+                          );
                         },
                       ),
-                    );
-                  },
-                ),),
-               const SizedBox(height: 5.0),
-               
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            "Narração",
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                          Semantics(
+                            label: 'Ativar ou desativar a narração por voz',
+                            toggled: _isNarrationEnabled,
+                            child: Switch(
+                              value: _isNarrationEnabled,
+                              activeColor: Colors.blue,
+                              onChanged: (value) {
+                                setState(() {
+                                  _isNarrationEnabled = value;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            "Salto Automático",
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                          Semantics(
+                            label: 'Ativar ou desativar o Salto Automático',
+                            toggled: _isAutoCompleteJumpEnabled,
+                            child: Switch(
+                              value: _isAutoCompleteJumpEnabled,
+                              activeColor: Colors.blue,
+                              onChanged: (value) {
+                                setState(() {
+                                  _isAutoCompleteJumpEnabled = value;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (!kIsWeb)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              "Sair",
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20,
+                              ),
+                            ),
+                            Semantics(
+                              label: 'Fechar o aplicativo',
+                              button: true,
+                              child: IconButton(
+                                icon: const Icon(Icons.exit_to_app,
+                                    color: Colors.red),
+                                tooltip: "Fechar o aplicativo",
+                                onPressed: () {
+                                  _showExitConfirmationDialog(context);
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 5.0),
                 Expanded(
                   child: Stack(
                     children: [
-                       Positioned.fill(
+                      Positioned.fill(
                         child: CustomPaint(
                           painter: GridPainter(
                             numColumns: numColumns,
@@ -1147,14 +1221,6 @@ Future<void> _announcePalitoLocations() async {
                       ),
                       Consumer<CharacterController>(
                         builder: (context, controller, child) {
-                          // if (controller.borderAlert != null) {
-                          //   WidgetsBinding.instance.addPostFrameCallback((_) {
-                          //     ScaffoldMessenger.of(context).showSnackBar(
-                          //       SnackBar(
-                          //           content: Text(controller.borderAlert!)),
-                          //     );
-                          //   });
-                          // }
                           return Positioned(
                             top: controller.yPosition,
                             left: controller.xPosition,
@@ -1190,28 +1256,23 @@ Future<void> _announcePalitoLocations() async {
                                 }
                               },
                               onPanEnd: (details) {
-    // Quando o usuário solta o dedo, alinhamos o personagem à grade.
-    controller.snapToGrid(); // Você precisará tornar _snapToGrid pública (snapToGrid)
-  },
-                              child: Container(
-      // PASSO 2: Use `decoration` para adicionar cor e forma.
-      decoration: BoxDecoration(
-        // Defina a cor de fundo que você deseja.
-        color: Colors.yellow.withOpacity(0.5), 
-        
-        // Defina a forma do fundo. Um círculo fica visualmente bom.
-        shape: BoxShape.rectangle, 
-      ),
-      
-      // Adicione um pouco de padding para que o beija-flor não fique colado nas bordas do círculo.
-      // padding: const EdgeInsets.all(8.0), 
-      
-      // PASSO 3: O filho do Container é a sua Imagem original.
-      child: Image.asset(
-        'assets/images/personagem.png',
-        height: 70, // A altura aqui controla o tamanho da imagem interna
-        fit: BoxFit.contain,
-      ),
+                                controller.snapToGrid();
+                              },
+                              onTap: () {
+                                if (_isNarrationEnabled) {
+                                  _announceLocation();
+                                }
+                              },
+                              child: Semantics(
+                                label:
+                                    'Personagem Beija-Flor, toque duas vezes para ouvir sua posição na tela, com a narração ativada',
+                                image: false,
+                                child: Image.asset(
+                                  'assets/images/personagem.png',
+                                  height: controller.characterSize,
+                                  width: controller.characterSize,
+                                  fit: BoxFit.contain,
+                                ),
                               ),
                             ),
                           );
@@ -1220,68 +1281,85 @@ Future<void> _announcePalitoLocations() async {
                       SingleChildScrollView(
                         child: Column(
                           children: [
-                            // const SizedBox(height: 18),
                             MenuButton(
                               iconPath: 'assets/images/Palito V.png',
                               label: "Palito V",
                               tooltip: "Adicionar palito vertical",
                               semanticsLabel: "Palito Vertical",
-                              onTap: () {
+                              onTap: () async {
                                 final characterController =
                                     Provider.of<CharacterController>(context,
                                         listen: false);
                                 final palitoController =
                                     Provider.of<PalitoController>(context,
                                         listen: false);
-                                const double baseSize = 50;
-                                double baseOffsetX = 40;
-                                double baseOffsetY = -25;
-                                final sizeDiff = _palitoSize - baseSize;
-                                final offsetX =
-                                    baseOffsetX - (sizeDiff / 10) * 5;
-                                final offsetY =
-                                    baseOffsetY - (sizeDiff / 10) * 10;
 
-                                Offset position = Offset(
-                                  characterController.xPosition + offsetX,
-                                  characterController.yPosition + offsetY,
+                                final position =
+                                    palitoController.getPositionForNewPalito(
+                                  "Palito V",
+                                  Offset(characterController.xPosition,
+                                      characterController.yPosition),
+                                  _palitoSize,
                                 );
                                 Palito tempPalito = Palito(
                                     position: position,
                                     type: "Palito V",
                                     semanticsLabel: "Palito vertical",
                                     size: _palitoSize);
+
                                 if (tempPalito.isPartiallyOffscreen(
                                     screenWidth, screenHeight, context)) {
-                                  // if (!_isNarrationEnabled && !_palitoOffscreenAlertShown) {
-                                  if (!_isNarrationEnabled) {
-                                    // _palitoOffscreenAlertShown = true;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Semantics(
-                                          label: 'Alerta: Palito fora da tela.',
-                                          child: const Text(
-                                            "Não é possível adicionar um Palito fora da tela. Diminua o tamanho ou mude a posição.",
-                                          ),
-                                        ),
-                                      ),
-                                    );
+                                  const String errorMessage =
+                                      "Não é possível adicionar um Palito na borda da tela. Mude a posição.";
+                                  if (_isNarrationEnabled) {
+                                    _ttsService.speak(errorMessage);
                                   }
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Semantics(
+                                        label: 'Alerta: Palito fora da tela.',
+                                        child: const Text(errorMessage),
+                                      ),
+                                    ),
+                                  );
                                   return;
-                                } else {
-                                  // _palitoOffscreenAlertShown = false;
                                 }
                                 palitoController.addPalito(position, "Palito V",
                                     "Palito vertical", _palitoSize);
+                                if (_isNarrationEnabled) {
+                                  _announceNewPalitoLocation(tempPalito);
+                                }
+                                if (_isAutoCompleteJumpEnabled) {
+                                  final bool moveSuccessful =
+                                      characterController.moveUp();
+
+                                  if (moveSuccessful) {
+                                    if (_isNarrationEnabled) {
+                                      await _announceNextPalitoLocation();
+                                      await _announceNewPalitoLocation(
+                                          tempPalito);
+                                    }
+                                  } else {
+                                    const String borderMessage =
+                                        "Não é possível saltar, personagem atingiu a borda da tela.";
+                                    if (_isNarrationEnabled) {
+                                      _ttsService.speak(borderMessage);
+                                    }
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(borderMessage)));
+                                    }
+                                  }
+                                }
                               },
                             ),
-
                             MenuButton(
                               iconPath: 'assets/images/Palito DD.png',
                               label: "Palito DD",
                               tooltip: "Adicionar palito diagonal à direita",
                               semanticsLabel: "Palito Diagonal à Direita",
-                              onTap: () {
+                              onTap: () async {
                                 final characterController =
                                     Provider.of<CharacterController>(context,
                                         listen: false);
@@ -1289,19 +1367,12 @@ Future<void> _announcePalitoLocations() async {
                                     Provider.of<PalitoController>(context,
                                         listen: false);
 
-                                const double baseSize = 50;
-                                double baseOffsetX = 52;
-                                double baseOffsetY = -25;
-
-                                final sizeDiff = _palitoSize - baseSize;
-                                final offsetX =
-                                    baseOffsetX - (sizeDiff / 10) * 3;
-                                final offsetY =
-                                    baseOffsetY - (sizeDiff / 10) * 9.5;
-
-                                final Offset position = Offset(
-                                  characterController.xPosition + offsetX,
-                                  characterController.yPosition + offsetY,
+                                final position =
+                                    palitoController.getPositionForNewPalito(
+                                  "Palito DD",
+                                  Offset(characterController.xPosition,
+                                      characterController.yPosition),
+                                  _palitoSize,
                                 );
 
                                 Palito tempPalito = Palito(
@@ -1312,23 +1383,20 @@ Future<void> _announcePalitoLocations() async {
 
                                 if (tempPalito.isPartiallyOffscreen(
                                     screenWidth, screenHeight, context)) {
-                                  // if (!_isNarrationEnabled && !_palitoOffscreenAlertShown) {
-                                  if (!_isNarrationEnabled) {
-                                    // _palitoOffscreenAlertShown = true;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Semantics(
-                                          label: 'Alerta: Palito fora da tela.',
-                                          child: const Text(
-                                            "Não é possível adicionar um Palito fora da tela. Diminua o tamanho ou mude a posição.",
-                                          ),
-                                        ),
-                                      ),
-                                    );
+                                  const String errorMessage =
+                                      "Não é possível adicionar um Palito na borda da tela. Mude a posição.";
+                                  if (_isNarrationEnabled) {
+                                    _ttsService.speak(errorMessage);
                                   }
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Semantics(
+                                        label: 'Alerta: Palito fora da tela.',
+                                        child: const Text(errorMessage),
+                                      ),
+                                    ),
+                                  );
                                   return;
-                                } else {
-                                  // _palitoOffscreenAlertShown = false;
                                 }
 
                                 palitoController.addPalito(
@@ -1336,6 +1404,32 @@ Future<void> _announcePalitoLocations() async {
                                     "Palito DD",
                                     "Palito Diagonal à Direita",
                                     _palitoSize);
+                                if (_isNarrationEnabled) {
+                                  _announceNewPalitoLocation(tempPalito);
+                                }
+                                if (_isAutoCompleteJumpEnabled) {
+                                  final bool moveSuccessful =
+                                      characterController.moveRight();
+
+                                  if (moveSuccessful) {
+                                    if (_isNarrationEnabled) {
+                                      await _announceNextPalitoLocation();
+                                      await _announceNewPalitoLocation(
+                                          tempPalito);
+                                    }
+                                  } else {
+                                    const String borderMessage =
+                                        "Não é possível saltar, personagem atingiu a borda da tela.";
+                                    if (_isNarrationEnabled) {
+                                      _ttsService.speak(borderMessage);
+                                    }
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(borderMessage)));
+                                    }
+                                  }
+                                }
                               },
                             ),
                             MenuButton(
@@ -1343,27 +1437,23 @@ Future<void> _announcePalitoLocations() async {
                               label: "Palito DE",
                               tooltip: "Adicionar palito diagonal à esquerda",
                               semanticsLabel: "Palito Diagonal à Esquerda",
-                              onTap: () {
+                              onTap: () async {
                                 final characterController =
                                     Provider.of<CharacterController>(context,
                                         listen: false);
                                 final palitoController =
                                     Provider.of<PalitoController>(context,
                                         listen: false);
-
-                                const double baseSize = 50;
-                                double baseOffsetX = 27;
-                                double baseOffsetY = -25;
-
-                                final sizeDiff = _palitoSize - baseSize;
-                                final offsetX =
-                                    baseOffsetX - (sizeDiff / 10) * 6;
-                                final offsetY =
-                                    baseOffsetY - (sizeDiff / 10) * 9.5;
-
-                                final Offset position = Offset(
-                                  characterController.xPosition + offsetX,
-                                  characterController.yPosition + offsetY,
+                                final screenWidth =
+                                    MediaQuery.of(context).size.width;
+                                final screenHeight =
+                                    MediaQuery.of(context).size.height;
+                                final position =
+                                    palitoController.getPositionForNewPalito(
+                                  "Palito DE",
+                                  Offset(characterController.xPosition,
+                                      characterController.yPosition),
+                                  _palitoSize,
                                 );
 
                                 Palito tempPalito = Palito(
@@ -1372,25 +1462,23 @@ Future<void> _announcePalitoLocations() async {
                                     semanticsLabel:
                                         "Palito Diagonal à Esquerda",
                                     size: _palitoSize);
+
                                 if (tempPalito.isPartiallyOffscreen(
                                     screenWidth, screenHeight, context)) {
-                                  // if (!_isNarrationEnabled && !_palitoOffscreenAlertShown) {
-                                  if (!_isNarrationEnabled) {
-                                    // _palitoOffscreenAlertShown = true;
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Semantics(
-                                          label: 'Alerta: Palito fora da tela.',
-                                          child: const Text(
-                                            "Não é possível adicionar um Palito fora da tela. Diminua o tamanho ou mude a posição.",
-                                          ),
-                                        ),
-                                      ),
-                                    );
+                                  const String errorMessage =
+                                      "Não é possível adicionar um Palito na borda da tela. Mude a posição.";
+                                  if (_isNarrationEnabled) {
+                                    _ttsService.speak(errorMessage);
                                   }
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Semantics(
+                                        label: 'Alerta: Palito fora da tela.',
+                                        child: const Text(errorMessage),
+                                      ),
+                                    ),
+                                  );
                                   return;
-                                } else {
-                                  // _palitoOffscreenAlertShown = false;
                                 }
 
                                 palitoController.addPalito(
@@ -1398,70 +1486,89 @@ Future<void> _announcePalitoLocations() async {
                                     "Palito DE",
                                     "Palito Diagonal à Esquerda",
                                     _palitoSize);
+
+                                if (_isNarrationEnabled) {
+                                  _announceNewPalitoLocation(tempPalito);
+                                }
                               },
                             ),
                             MenuButton(
-                              iconPath: 'assets/images/Palito H.png',
-                              label: "Palito H",
-                              tooltip: "Adicionar palito horizontal",
-                              semanticsLabel: "Palito Horizontal",
-                              onTap: () {
-                                final characterController =
-                                    Provider.of<CharacterController>(context,
-                                        listen: false);
-                                final palitoController =
-                                    Provider.of<PalitoController>(context,
-                                        listen: false);
-
-                                const double baseSize = 50;
-                                double baseOffsetX = 65;
-                                double baseOffsetY = -2;
-                                final sizeDiff = _palitoSize - baseSize;
-                                final offsetY =
-                                    baseOffsetY - (sizeDiff / 10) * 5;
-                                final Offset position = Offset(
-                                  characterController.xPosition + baseOffsetX,
-                                  characterController.yPosition + offsetY,
-                                );
-                                Palito tempPalito = Palito(
-                                    position: position,
-                                    type: "Palito H",
-                                    semanticsLabel: "Palito Horizontal",
-                                    size: _palitoSize);
-
-                                if (tempPalito.isPartiallyOffscreen(
-                                    screenWidth, screenHeight, context)) {
-                                  // if (!_isNarrationEnabled && !_palitoOffscreenAlertShown) {
-                                  if (!_isNarrationEnabled) {
-                                    // _palitoOffscreenAlertShown = true;
+                                iconPath: 'assets/images/Palito H.png',
+                                label: "Palito H",
+                                tooltip: "Adicionar palito horizontal",
+                                semanticsLabel: "Palito Horizontal",
+                                onTap: () async {
+                                  final characterController =
+                                      Provider.of<CharacterController>(context,
+                                          listen: false);
+                                  final palitoController =
+                                      Provider.of<PalitoController>(context,
+                                          listen: false);
+                                  final position =
+                                      palitoController.getPositionForNewPalito(
+                                    "Palito H",
+                                    Offset(characterController.xPosition,
+                                        characterController.yPosition),
+                                    _palitoSize,
+                                  );
+                                  Palito tempPalito = Palito(
+                                      position: position,
+                                      type: "Palito H",
+                                      semanticsLabel: "Palito Horizontal",
+                                      size: _palitoSize);
+                                  if (tempPalito.isPartiallyOffscreen(
+                                      screenWidth, screenHeight, context)) {
+                                    const String errorMessage =
+                                        "Não é possível adicionar um Palito na borda da tela. Mude a posição.";
+                                    if (_isNarrationEnabled) {
+                                      _ttsService.speak(errorMessage);
+                                    }
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Semantics(
                                           label: 'Alerta: Palito fora da tela.',
-                                          child: const Text(
-                                            "Não é possível adicionar um Palito fora da tela. Diminua o tamanho ou mude a posição.",
-                                          ),
+                                          child: const Text(errorMessage),
                                         ),
                                       ),
                                     );
+                                    return;
                                   }
-                                  return;
-                                } else {
-                                  // _palitoOffscreenAlertShown = false;
-                                }
 
-                                palitoController.addPalito(position, "Palito H",
-                                    "Palito Horizontal", _palitoSize);
-                              },
-                            ),
+                                  palitoController.addPalito(
+                                      position,
+                                      "Palito H",
+                                      "Palito Horizontal",
+                                      _palitoSize);
+                                  if (_isAutoCompleteJumpEnabled) {
+                                    final bool moveSuccessful =
+                                        characterController.moveRight();
 
+                                    if (moveSuccessful) {
+                                      if (_isNarrationEnabled) {
+                                        await _announceNextPalitoLocation();
+                                        await _announceNewPalitoLocation(
+                                            tempPalito);
+                                      }
+                                    } else {
+                                      const String borderMessage =
+                                          "Não é possível saltar, personagem atingiu a borda da tela.";
+                                      if (_isNarrationEnabled) {
+                                        _ttsService.speak(borderMessage);
+                                      }
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(const SnackBar(
+                                                content: Text(borderMessage)));
+                                      }
+                                    }
+                                  }
+                                }),
                             const SizedBox(height: 10),
                           ],
                         ),
                       ),
                       if (_showJoystick)
                         Positioned(
-                         
                           bottom: 10,
                           right: 16,
                           child: Row(
@@ -1469,7 +1576,12 @@ Future<void> _announcePalitoLocations() async {
                             children: [
                               JoystickButton(
                                 icon: Icons.arrow_left,
-                                onPressed: () => controller.moveLeft(),
+                                onPressed: () {
+                                  controller.moveLeft();
+                                  if (_isNarrationEnabled) {
+                                    _announceNextPalitoLocation();
+                                  }
+                                },
                                 tooltip: "Saltar para esquerda",
                                 semanticsLabel: "Saltar para esquerda",
                               ),
@@ -1479,14 +1591,24 @@ Future<void> _announcePalitoLocations() async {
                                 children: [
                                   JoystickButton(
                                     icon: Icons.arrow_drop_up,
-                                    onPressed: () => controller.moveUp(),
+                                    onPressed: () {
+                                      controller.moveUp();
+                                      if (_isNarrationEnabled) {
+                                        _announceNextPalitoLocation();
+                                      }
+                                    },
                                     tooltip: "Saltar para cima",
                                     semanticsLabel: "Saltar para cima",
                                   ),
                                   const SizedBox(height: 10),
                                   JoystickButton(
                                     icon: Icons.arrow_drop_down,
-                                    onPressed: () => controller.moveDown(),
+                                    onPressed: () {
+                                      controller.moveDown();
+                                      if (_isNarrationEnabled) {
+                                        _announceNextPalitoLocation();
+                                      }
+                                    },
                                     tooltip: "Saltar para baixo",
                                     semanticsLabel: "Saltar para baixo",
                                   ),
@@ -1495,7 +1617,12 @@ Future<void> _announcePalitoLocations() async {
                               const SizedBox(width: 1),
                               JoystickButton(
                                 icon: Icons.arrow_right,
-                                onPressed: () => controller.moveRight(),
+                                onPressed: () {
+                                  controller.moveRight();
+                                  if (_isNarrationEnabled) {
+                                    _announceNextPalitoLocation();
+                                  }
+                                },
                                 tooltip: "Saltar para direita",
                                 semanticsLabel: "Saltar para direita",
                               ),
@@ -1505,16 +1632,11 @@ Future<void> _announcePalitoLocations() async {
                     ],
                   ),
                 ),
-               
               ],
             ),
           ),
           drawer: Drawer(
-            //     child: Scrollbar(
-            // thumbVisibility: true,
-            // controller: _drawerScrollController,
             child: ListView(
-              // padding: EdgeInsets.zero,
               children: [
                 DrawerHeader(
                   decoration: const BoxDecoration(
@@ -1621,6 +1743,7 @@ Future<void> _announcePalitoLocations() async {
                     child: const Text("Joystick"),
                   ),
                   value: _showJoystick,
+                  activeColor: Colors.blue,
                   onChanged: (bool value) {
                     setState(() {
                       _showJoystick = value;
@@ -1636,12 +1759,9 @@ Future<void> _announcePalitoLocations() async {
                   title: const Text("Localizar Palitos"),
                   onTap: () {
                     Navigator.pop(context);
-
-    // 2. Agenda a chamada do TTS para DEPOIS que o próximo frame for renderizado.
-    // Isso garante que a UI (e a ponte de comunicação do plugin) esteja estável.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _announcePalitoLocations();
-    });
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _announcePalitoLocations();
+                    });
                   },
                 ),
                 ListTile(
@@ -1656,17 +1776,17 @@ Future<void> _announcePalitoLocations() async {
                             value: _palitoSize,
                             min: 50.0,
                             max: 120.0,
-                            divisions: 7,
+                            divisions: 10,
                             label: 'Tamanho do Palito',
                             onChanged: (double value) {
-                               final characterController = Provider.of<CharacterController>(context, listen: false);
-  final palitoController = Provider.of<PalitoController>(context, listen: false);
-
-  // 2. Limpa todos os palitos da tela
-  palitoController.clearPalitos();
-
-  // 3. Reseta a posição do beija-flor para o centro
-  characterController.resetPosition();
+                              final characterController =
+                                  Provider.of<CharacterController>(context,
+                                      listen: false);
+                              final palitoController =
+                                  Provider.of<PalitoController>(context,
+                                      listen: false);
+                              palitoController.clearPalitos();
+                              characterController.resetPosition();
                               setState(() {
                                 _palitoSize = value;
                                 characterController.setStepSize(value);
@@ -1760,20 +1880,20 @@ Future<void> _announcePalitoLocations() async {
                   },
                 ),
                 ListTile(
-              leading: const Icon(Icons.info_outline, color: Colors.blue),
-              title: Semantics(
-                label: 'Abrir a página de informações sobre o aplicativo',
-                child: const Text("Sobre"),
-              ),
-              onTap: () {
-                Navigator.pop(context); // Fecha o drawer antes de navegar
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const AboutScreen()),
-                );
-              },
-            ),
+                  leading: const Icon(Icons.info_outline, color: Colors.blue),
+                  title: Semantics(
+                    label: 'Abrir a página de informações sobre o aplicativo',
+                    child: const Text("Sobre"),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const AboutScreen()),
+                    );
+                  },
+                ),
                 ListTile(
                   leading: const Icon(Icons.handshake, color: Colors.blue),
                   title: Semantics(

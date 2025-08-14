@@ -1,5 +1,3 @@
-// user_interface/screens/about_screen.dart
-
 import 'package:flutter/material.dart';
 
 class AboutScreen extends StatelessWidget {
@@ -7,8 +5,6 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Adicione esta tela ao menu lateral (drawer) do seu MathsticksScreen
-    // para que os usuários possam acessá-la.
     return Scaffold(
       appBar: AppBar(
         title: const Text("Sobre"),
@@ -51,7 +47,7 @@ class AboutScreen extends StatelessWidget {
             ),
             const Center(
               child: Text(
-                'Versão 1.1',
+                'Versão 1.2',
                 style: TextStyle(
                   fontSize: 16,
                   fontStyle: FontStyle.italic,
@@ -115,8 +111,6 @@ class AboutScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // IMPORTANTE: Certifique-se que o caminho dos assets está correto.
-                  // No seu código, as imagens estão em 'assets/images/'.
                   Image.asset(
                     'assets/images/IFSP_Logo.png',
                     height: 60,

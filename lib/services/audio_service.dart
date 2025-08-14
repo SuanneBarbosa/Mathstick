@@ -1,8 +1,7 @@
 import 'package:just_audio/just_audio.dart';
 
 class AudioService {
-  final AudioPlayer _audioPlayer = AudioPlayer(); 
-  
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   Future<void> playAudio(String assetPath, {double speed = 1.0}) async {
     try {
@@ -21,11 +20,11 @@ class AudioService {
     }
   }
 
-   void setSpeed(double speed) {
+  void setSpeed(double speed) {
     _audioPlayer.setSpeed(speed);
   }
 
   void dispose() {
-    _audioPlayer.dispose(); 
+    _audioPlayer.dispose();
   }
 }
