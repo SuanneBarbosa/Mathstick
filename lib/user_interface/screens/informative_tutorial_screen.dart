@@ -1,26 +1,26 @@
-
 import 'package:flutter/material.dart';
 import 'package:mathsticks/user_interface/screens/mathsticks_screen.dart';
 import 'package:provider/provider.dart';
 import '../../../services/character_service.dart';
 import '../../../services/tutorial_service.dart';
-import '../screens/practical_tutorial_screen.dart';
 import '../widgets/informative_tutorial_ui.dart';
 import '../../../services/palito_service.dart';
 import 'package:flutter/services.dart';
-
+import '../widgets/vlibras_widget.dart';
 
 class InfoStep {
   final GlobalKey? targetKey;
   final String Function(BuildContext) getInstruction;
   final Widget? customHighlight;
   final bool isActionStep;
+  final VoidCallback? onStepEnter;
 
   InfoStep({
     this.targetKey,
     required this.getInstruction,
     this.customHighlight,
     this.isActionStep = false,
+    this.onStepEnter,
   });
 }
 
@@ -37,7 +37,6 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
   int _currentStepIndex = 0;
   OverlayEntry? _overlayEntry;
 
-  // Chaves para identificar os widgets que queremos destacar
   final GlobalKey _keyGrid = GlobalKey();
   final GlobalKey _keyPalitoButtons = GlobalKey();
   final GlobalKey _keyJoystick = GlobalKey();
@@ -53,7 +52,6 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
   final GlobalKey _keyJumpRight = GlobalKey();
 
   final FocusNode _instructionFocusNode = FocusNode();
-
   bool _isAutoJumpEnabled = false;
   List<InfoStep> _tutorialSteps = [];
 
@@ -63,206 +61,227 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<PalitoController>(context, listen: false).clearPalitos();
-
-      final ctrl = Provider.of<CharacterController>(context, listen: false);
-      final size = MediaQuery.of(context).size;
-      ctrl.setStepSize(70.0);
-      ctrl.setScreenSize(size.width, size.height);
-
+      _resetContext();
       _setupSteps();
+      // Espera o primeiro layout para desenhar o destaque
       _showHighlight();
     });
   }
 
+  void _resetContext() {
+    Provider.of<PalitoController>(context, listen: false).clearPalitos();
+    _isAutoJumpEnabled = false;
+    final ctrl = Provider.of<CharacterController>(context, listen: false);
+    final size = MediaQuery.of(context).size;
+    ctrl.setStepSize(70.0);
+    ctrl.setScreenSize(size.width, size.height);
+    ctrl.resetPosition();
+  }
 
   void _setupSteps() {
     _tutorialSteps = [
+      // 1. INTRODUÇÃO
+      InfoStep(
+        getInstruction: (_) =>
+            'Ative o VLibras no ícone à direita, depois toque em "Avançar" ou apenas em "Avançar" para seguir sem a tradução.',
+      ),
       InfoStep(
         getInstruction: (_) =>
             'Bem-vindo ao Mathsticks! Sua tela é dividida em uma grade com linhas e colunas.',
       ),
       InfoStep(
         getInstruction: (_) =>
-            'As colunas são organizadas em ordem alfabética da esquerda para a direita, e as linhas em ordem numérica de cima para baixo.',
+            'As colunas são organizadas em ordem alfabética da esquerda para direita, e as linhas em ordem numérica de cima para baixo.',
       ),
       InfoStep(
         targetKey: _keyCharacter,
         getInstruction: (_) =>
-            'No aplicativo, temos o personagem Beija-flor. Ele serve como o ponto de referência, para todos os palitos que você adicionar na tela.',
+            'O personagem pássaro é seu ponto de referência para adicionar os palitos.',
       ),
       InfoStep(
         targetKey: _keyPalitoButtons,
         getInstruction: (_) =>
-            'Para escolher e adicionar um dos quatro tipos de palitos, use os botões no canto superior esquerdo da tela.',
+            'Para adicionar os palitos na tela, use os ícones no canto superior esquerdo.',
       ),
       InfoStep(
         targetKey: _keyJoystick,
         getInstruction: (_) =>
-            'E para mover o personagem pela grade, use os botões de salto no canto inferior direito da tela.',
+            'Para mover o personagem use os ícones de salto, chamado de Joystick.',
+      ),
+      
+
+      // 2. PRÁTICA MANUAL
+      InfoStep(
+        getInstruction: (_) =>
+            'Vamos praticar desenhando um quadrado!',
+        onStepEnter: _resetContext,
       ),
       InfoStep(
-        targetKey: _keyAutoJumpToggle,
-        getInstruction: (_) =>
-            'Na parte superior central da tela, você encontrará a opção “Salto Automático”. Ao ativá-la, sempre que um novo palito for adicionado, o personagem saltará automaticamente para a próxima posição.',
+        targetKey: _keyPalitoH,
+        isActionStep: true,
+        getInstruction: (_) => 'Comece adicionando um Palito Horizontal.',
       ),
       InfoStep(
         targetKey: _keyPalitoV,
         isActionStep: true,
-        getInstruction: (context) {
-          final characterCtrl =
-              Provider.of<CharacterController>(context, listen: false);
-          final palitoCtrl =
-              Provider.of<PalitoController>(context, listen: false);
-          final cellSize = characterCtrl.characterSize;
-
-          final palitoPosition = palitoCtrl.getPositionForNewPalito(
-            'Palito V',
-            Offset(characterCtrl.xPosition, characterCtrl.yPosition),
-            cellSize,
-          );
-          final palitoCenter = Offset(
-            palitoPosition.dx + cellSize / 2,
-            palitoPosition.dy + cellSize / 2,
-          );
-          final screenWidth = MediaQuery.of(context).size.width;
-          final numColumns = (screenWidth / cellSize).floor();
-          final col =
-              (palitoCenter.dx / cellSize).floor().clamp(0, numColumns - 1);
-          final row = (palitoCenter.dy / cellSize).floor();
-          final colLetter = String.fromCharCode('A'.codeUnitAt(0) + col);
-          final rowNum = row + 1;
-
-          return 'Vamos testar! Se você adicionar um palito agora, ele será colocado na Coluna $colLetter, Linha $rowNum. Então clique no botão do Palito "V" que significa Palito Vertical para continuar.';
-        },
-      ),
-      InfoStep(
-        targetKey: _keyPalitoDD,
-        getInstruction: (_) =>
-            'Ótimo! Agora clique no botão do Palito "DD" que significa Palito Diagonal à Direita.',
-        isActionStep: true,
-      ),
-      InfoStep(
-        targetKey: _keyPalitoDE,
-        getInstruction: (_) =>
-            'Perfeito. Clique no botão do Palito "DE" que significa Palito Diagonal à Esquerda.',
-        isActionStep: true,
-      ),
-      InfoStep(
-        targetKey: _keyPalitoH,
-        getInstruction: (_) =>
-            'Excelente! Agora, clique no botão do Palito "H" que significa Palito Horizontal.',
-        isActionStep: true,
-      ),
-      InfoStep(
-        targetKey: _keyJumpUp,
-        getInstruction: (_) =>
-            'Agora teste os saltos. Toque no botão de Saltar para CIMA.',
-        isActionStep: true,
-      ),
-      InfoStep(
-        targetKey: _keyJumpDown,
-        getInstruction: (_) => 'Isso! Agora toque no botão de Saltar para BAIXO.',
-        isActionStep: true,
-      ),
-      InfoStep(
-        targetKey: _keyJumpLeft,
-        getInstruction: (_) => 'Quase lá. Toque no botão de Saltar para a ESQUERDA.',
-        isActionStep: true,
+        getInstruction: (_) => 'Adicione um Palito Vertical.',
       ),
       InfoStep(
         targetKey: _keyJumpRight,
-        getInstruction: (_) => 'E por fim, toque no botão de Saltar para a DIREITA.',
         isActionStep: true,
+        getInstruction: (_) => 'Agora mova o personagem clicando no ícone Saltar Para Direita.',
+      ),
+      InfoStep(
+        targetKey: _keyPalitoV,
+        isActionStep: true,
+        getInstruction: (_) => 'Adicione mais um Palito Vertical.',
+      ),
+      InfoStep(
+        targetKey: _keyJumpUp,
+        isActionStep: true,
+        getInstruction: (_) => 'Agora, mova o personagem no botao Saltar Para cima.',
+      ),
+      InfoStep(
+        targetKey: _keyJumpLeft,
+        isActionStep: true,
+        getInstruction: (_) => 'Mova o personagem no ícone Saltar Para Esquerda.',
+      ),
+      InfoStep(
+        targetKey: _keyPalitoH,
+        isActionStep: true,
+        getInstruction: (_) => 'Para fechar o quadrado, adicione um Palito Horizontal.',
       ),
       InfoStep(
         targetKey: _keyAutoJumpToggle,
         getInstruction: (_) =>
-            'Para terminar, clique no botão de "Salto Automático" para ativá-lo.',
-        isActionStep: true,
+            'Na parte superior central da tela está o ícone de "Salto Automático". Quando ativado, sempre que um novo palito for adicionado, o personagem saltará automaticamente para a próxima posição',
+         onStepEnter: _resetContext,
+     
       ),
       InfoStep(
-        getInstruction: (_) => 'Tudo pronto! Vamos para um exercício prático.',
+        targetKey: _keyAutoJumpToggle,
+        isActionStep: true,
+        getInstruction: (_) => 'Agora, ative Salto Automático para testá-lo.',
+       
+      ),
+      InfoStep(
+        targetKey: _keyPalitoH,
+        isActionStep: true,
+        getInstruction: (_) => 'Adicione um Palito Horizontal. O personagem saltará sozinho!',
+      ),
+      InfoStep(
+        targetKey: _keyPalitoV,
+        isActionStep: true,
+        getInstruction: (_) => 'Ele deu um salto para a direita! Agora adicione um Palito Vertical.',
+      ),
+      InfoStep(
+        targetKey: _keyJumpLeft,
+        isActionStep: true,
+        getInstruction: (_) => 'Mova o personagem no ícone Saltar Para Esquerda.',
+      ),
+      InfoStep(
+        targetKey: _keyJumpDown,
+        isActionStep: true,
+        getInstruction: (_) => 'Agora, mova o personagem no ícone Saltar Para Baixo.',
+      ),
+      InfoStep(
+        targetKey: _keyPalitoV,
+        isActionStep: true,
+        getInstruction: (_) => 'Adicione outro Palito Vertical e ele também saltará para cima.',
+      ),
+      InfoStep(
+        targetKey: _keyPalitoH,
+        isActionStep: true,
+        getInstruction: (_) => 'Para finalizar o exercício, adicione um Palito Horizontal.',
+      ),
+
+      // 4. FINALIZAÇÃO
+      InfoStep(
+        getInstruction: (_) =>
+            'Tutorial Finalizado!',
       ),
     ];
+  }
+
+  // Define se o joystick deve ir para a esquerda
+  bool _shouldMoveJoystickToLeft(GlobalKey? key) {
+    if (key == null) return false;
+    return key == _keyJumpUp ||
+        key == _keyJumpDown ||
+        key == _keyJumpLeft ||
+        key == _keyJumpRight || 
+        key == _keyJoystick;
   }
 
   void _nextStep() {
     Future.delayed(const Duration(milliseconds: 300), () {
       if (!mounted) return;
       if (_currentStepIndex < _tutorialSteps.length - 1) {
-        setState(() => _currentStepIndex++);
-        _showHighlight();
+        // 1. Remove o highlight antigo imediatamente para não ficar "fantasma"
+        _removeHighlight();
+        
+        setState(() {
+          _currentStepIndex++;
+          final nextStep = _tutorialSteps[_currentStepIndex];
+          if (nextStep.onStepEnter != null) {
+            nextStep.onStepEnter!();
+          }
+        });
+
+        // 2. CORREÇÃO PRINCIPAL: Espera o layout atualizar (joystick mover) antes de calcular a nova posição
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showHighlight();
+        });
       } else {
         _finishTutorial();
       }
     });
   }
 
-  void _showHighlight() {
+void _showHighlight() {
     _removeHighlight();
     if (_currentStepIndex >= _tutorialSteps.length) return;
 
     final step = _tutorialSteps[_currentStepIndex];
+    final String baseInstruction = step.getInstruction(context);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      VLibrasWidget.buscarTraducao(baseInstruction);
+    });
+    
+    if (step.targetKey != null && step.targetKey!.currentContext == null) {
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (mounted) _showHighlight();
+      });
+      return;
+    }
 
     _overlayEntry = OverlayEntry(
       builder: (context) {
+        final screenSize = MediaQuery.of(context).size;
+        
+        final double fontSize = (screenSize.width * 0.025).clamp(16.0, 24.0);
+        final double btnFontSize = (screenSize.width * 0.022).clamp(16.0, 24.0);
+        
         Rect highlightRect = Rect.zero;
         if (step.targetKey?.currentContext != null) {
-          final renderBox =
-              step.targetKey!.currentContext!.findRenderObject() as RenderBox;
+          final renderBox = step.targetKey!.currentContext!.findRenderObject() as RenderBox;
           final offset = renderBox.localToGlobal(Offset.zero);
-          highlightRect = Rect.fromLTWH(offset.dx, offset.dy,
-                  renderBox.size.width, renderBox.size.height)
-              .inflate(8.0);
+          highlightRect = Rect.fromLTWH(offset.dx, offset.dy, renderBox.size.width, renderBox.size.height).inflate(8.0);
         }
-
-        final screenSize = MediaQuery.of(context).size;
-        final topSafeArea = MediaQuery.of(context).padding.top;
-        const double instructionTopPadding = 40.0;
-        double instructionTopPosition = topSafeArea + instructionTopPadding;
-        const double instructionBoxHeight = 100.0;
-        final instructionRect = Rect.fromLTWH(
-            0, instructionTopPosition, screenSize.width, instructionBoxHeight);
-        final bool doesOverlap = highlightRect.overlaps(instructionRect);
-        double? finalTop;
-        double? finalBottom;
-        if (doesOverlap) {
-          finalTop = null;
-          finalBottom = screenSize.height / 2;
-        } else {
-          finalTop = instructionTopPosition;
-          finalBottom = null;
-        }
-        if (step.targetKey == null) {
-          finalTop = topSafeArea + instructionTopPadding;
-          finalBottom = null;
-        }
-
-        final String baseInstruction = step.getInstruction(context);
-        String semanticLabel = baseInstruction; 
 
         final bool isLastStep = _currentStepIndex == _tutorialSteps.length - 1;
-
+        String semanticLabel = baseInstruction;
         if (isLastStep) {
           semanticLabel = '$baseInstruction. Clique no botão concluir.';
         } else if (!step.isActionStep) {
           semanticLabel = '$baseInstruction. Clique no botão avançar para continuar.';
         }
-        
+
         return Material(
           type: MaterialType.transparency,
           child: Stack(
-            children: [
-              IgnorePointer(
-                child: ClipPath(
-                  clipper: InvertedClipper(
-                    rect: step.targetKey != null ? highlightRect : Rect.zero,
-                    radius: const Radius.circular(12),
-                  ),
-                  child: Container(color: Colors.black.withOpacity(0.7)),
-                ),
-              ),
+            children:[
               if (step.targetKey != null)
                 Positioned.fromRect(
                   rect: highlightRect,
@@ -270,85 +289,119 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
                     ignoring: true,
                     child: Container(
                       decoration: BoxDecoration(
-                        border:
-                            Border.all(color: Colors.yellowAccent, width: 2),
+                        border: Border.all(color: Colors.yellowAccent, width: 4),
                         borderRadius: BorderRadius.circular(12),
+                        boxShadow:[
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 10)
+                        ]
                       ),
                     ),
                   ),
                 ),
+              
               if (step.customHighlight != null)
                 IgnorePointer(ignoring: true, child: step.customHighlight!),
-              Positioned(
-                top: finalTop,
-                bottom: finalBottom,
-                left: screenSize.width * 0.2,
-                right: screenSize.width * 0.2,
-                child: IgnorePointer(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blueAccent,
-                      borderRadius: BorderRadius.circular(10),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
-                    ),
-                    child: Focus(
-                      focusNode: _instructionFocusNode,
-                      child: Semantics(
-                        liveRegion: true,
-                        label: semanticLabel,
-                        child: ExcludeSemantics(
-                          child: Text(
-                            baseInstruction,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
+
+              // CAIXA DE TEXTO COM TAMANHO AJUSTÁVEL E POSIÇÃO INTELIGENTE
+              Builder(
+                builder: (ctx) {
+                  Alignment boxAlignment;
+                  EdgeInsets boxMargin;
+
+                  // Lógica de posição
+                  if (isLastStep) {
+                    // SE FOR A ÚLTIMA TELA (TUTORIAL COMPLETO), FICA NO CENTRO ABSOLUTO
+                    boxAlignment = Alignment.center;
+                    boxMargin = EdgeInsets.zero;
+                  } else if (step.targetKey == _keyPalitoButtons || 
+                      step.targetKey == _keyPalitoV || 
+                      step.targetKey == _keyPalitoDD || 
+                      step.targetKey == _keyPalitoDE || 
+                      step.targetKey == _keyPalitoH) {
+                    boxAlignment = Alignment.topCenter;
+                    boxMargin = const EdgeInsets.only(top: 20.0);
+                  } else if (step.targetKey == _keyAutoJumpToggle) {
+                    boxAlignment = Alignment.bottomLeft;
+                    boxMargin = const EdgeInsets.only(left: 20.0, bottom: 20.0);
+                  } else {
+                    boxAlignment = Alignment.topLeft;
+                    boxMargin = const EdgeInsets.only(left: 20.0, top: 20.0);
+                  }
+
+                  return Positioned.fill(
+                    child: Align(
+                      alignment: boxAlignment,
+                      child: Padding(
+                        padding: boxMargin,
+                        child: Container(
+                          constraints: BoxConstraints(maxWidth: screenSize.width * 0.55),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            borderRadius: BorderRadius.circular(15),
+                            boxShadow:[
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, spreadRadius: 2)
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min, 
+                            children:[
+                              Focus(
+                                focusNode: _instructionFocusNode,
+                                child: Semantics(
+                                  liveRegion: true,
+                                  label: semanticLabel,
+                                  child: ExcludeSemantics(
+                                    child: Text(
+                                      baseInstruction,
+                                      style: TextStyle(
+                                        color: Colors.blueAccent, 
+                                        fontSize: fontSize,
+                                        fontWeight: FontWeight.bold,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                      textAlign: TextAlign.justify,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              // USO DE WRAP PARA GARANTIR CENTRALIZAÇÃO DOS BOTÕES
+                              Wrap(
+                                alignment: WrapAlignment.center,
+                                spacing: 16.0, // Espaço entre os botões
+                                runSpacing: 8.0,
+                                children:[
+                                  if (!isLastStep)
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
+                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                      ),
+                                      onPressed: _finishTutorial,
+                                      child: Text(
+                                        'Pular Tutorial',
+                                        style: TextStyle(fontSize: btnFontSize * 0.8, fontWeight: FontWeight.bold, color: Colors.white),
+                                      ),
+                                    ),
+                                  if (!step.isActionStep)
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                        textStyle: TextStyle(fontSize: btnFontSize, fontWeight: FontWeight.bold),
+                                      ),
+                                      onPressed: isLastStep ? _finishTutorial : _nextStep,
+                                      child: Text(isLastStep ? 'Concluir' : 'Avançar'),
+                                    ),
+                                ],
+                              )
+                            ],
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ),
-
-               Positioned(
-                bottom: 24,
-                left: 24,
-                right: 24,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    
-                    if (!step.isActionStep)
-                      ElevatedButton(
-                        onPressed: isLastStep ? _finishTutorial : _nextStep,
-                        child: Text(isLastStep ? 'Concluir' : 'Avançar'),
-                      ),
-                    
-                    
-                    if (!step.isActionStep && !isLastStep)
-                      const SizedBox(width: 16),
-                    
-                   
-                    if (!isLastStep)
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Colors.cyanAccent.withOpacity(0.9)),
-                        onPressed: _finishTutorial,
-                        child: const Text('Pular Tutorial'),
-                      ),
-                  ],
-                ),
+                  );
+                }
               ),
             ],
           ),
@@ -356,15 +409,14 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
       },
     );
 
-
     Overlay.of(context).insert(_overlayEntry!);
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _instructionFocusNode.canRequestFocus) {
         _instructionFocusNode.requestFocus();
       }
     });
   }
+
 
   void _removeHighlight() {
     _overlayEntry?.remove();
@@ -374,21 +426,16 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
   Future<void> _finishTutorial() async {
     _removeHighlight();
     await _tutorialService.completeInformativeTutorial();
-    if (!mounted) return;
+    await _tutorialService.completePracticalTutorial();
 
-    final practicalCompleted =
-        await _tutorialService.isPracticalTutorialCompleted();
     if (!mounted) return;
+    
+    Provider.of<PalitoController>(context, listen: false).clearPalitos();
+    Provider.of<CharacterController>(context, listen: false).resetPosition();
 
-    if (!practicalCompleted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const PracticalTutorialScreen()),
-      );
-    } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const Mathsticks()),
-      );
-    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const Mathsticks()),
+    );
   }
 
   void _handleAction(GlobalKey key) {
@@ -399,45 +446,43 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
     }
   }
 
+  // --- Callbacks de Ação ---
   void _onPalitoVTapped() {
-    final characterCtrl =
-        Provider.of<CharacterController>(context, listen: false);
-    final palitoCtrl = Provider.of<PalitoController>(context, listen: false);
-    final pos = palitoCtrl.getPositionForNewPalito('Palito V',
-        Offset(characterCtrl.xPosition, characterCtrl.yPosition), 70.0);
-    palitoCtrl.addPalito(pos, 'Palito V', 'Palito Vertical', 70.0);
+    _addPalito('Palito V', 'Palito Vertical');
     _handleAction(_keyPalitoV);
   }
-
   void _onPalitoDDTapped() {
-    final characterCtrl =
-        Provider.of<CharacterController>(context, listen: false);
-    final palitoCtrl = Provider.of<PalitoController>(context, listen: false);
-    final pos = palitoCtrl.getPositionForNewPalito('Palito DD',
-        Offset(characterCtrl.xPosition, characterCtrl.yPosition), 70.0);
-    palitoCtrl.addPalito(pos, 'Palito DD', 'Palito Diagonal à Direita', 70.0);
+    _addPalito('Palito DD', 'Palito Diagonal à Direita');
     _handleAction(_keyPalitoDD);
   }
-
   void _onPalitoDETapped() {
-    final characterCtrl =
-        Provider.of<CharacterController>(context, listen: false);
-    final palitoCtrl = Provider.of<PalitoController>(context, listen: false);
-    final pos = palitoCtrl.getPositionForNewPalito('Palito DE',
-        Offset(characterCtrl.xPosition, characterCtrl.yPosition), 70.0);
-    palitoCtrl.addPalito(
-        pos, 'Palito DE', 'Palito Diagonal à Esquerda', 70.0);
+    _addPalito('Palito DE', 'Palito Diagonal à Esquerda');
     _handleAction(_keyPalitoDE);
   }
-
   void _onPalitoHTapped() {
-    final characterCtrl =
-        Provider.of<CharacterController>(context, listen: false);
-    final palitoCtrl = Provider.of<PalitoController>(context, listen: false);
-    final pos = palitoCtrl.getPositionForNewPalito('Palito H',
-        Offset(characterCtrl.xPosition, characterCtrl.yPosition), 70.0);
-    palitoCtrl.addPalito(pos, 'Palito H', 'Palito Horizontal', 70.0);
+    _addPalito('Palito H', 'Palito Horizontal');
     _handleAction(_keyPalitoH);
+  }
+
+  void _addPalito(String type, String label) {
+    final characterCtrl = Provider.of<CharacterController>(context, listen: false);
+    final palitoCtrl = Provider.of<PalitoController>(context, listen: false);
+    
+    final pos = palitoCtrl.getPositionForNewPalito(
+        type, 
+        Offset(characterCtrl.xPosition, characterCtrl.yPosition), 
+        characterCtrl.characterSize
+    );
+    
+    palitoCtrl.addPalito(pos, type, label, characterCtrl.characterSize);
+
+    if (_isAutoJumpEnabled) {
+       switch (type) {
+        case 'Palito V': characterCtrl.moveUp(); break;
+        case 'Palito H': 
+        case 'Palito DD': characterCtrl.moveRight(); break;
+      }
+    }
   }
 
   @override
@@ -449,11 +494,20 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final GlobalKey? currentStepKey =
-        _tutorialSteps.isNotEmpty ? _tutorialSteps[_currentStepIndex].targetKey : null;
-    final bool isAutoJumpActionStep = _tutorialSteps.isNotEmpty &&
+    
+    // 1. Qual o passo atual?
+    final GlobalKey? currentStepKey = (_tutorialSteps.isNotEmpty && _currentStepIndex < _tutorialSteps.length)
+        ? _tutorialSteps[_currentStepIndex].targetKey
+        : null;
+        
+    final bool isAutoJumpActionStep = (_tutorialSteps.isNotEmpty && _currentStepIndex < _tutorialSteps.length) &&
         _tutorialSteps[_currentStepIndex].isActionStep &&
         _tutorialSteps[_currentStepIndex].targetKey == _keyAutoJumpToggle;
+
+     //final bool isAutoJumpEnabledInThisStep = isAutoJumpActionStep; 
+    
+    // 2. Decide se o joystick deve estar na ESQUERDA com base no passo atual
+    final bool moveJoystickLeft = _shouldMoveJoystickToLeft(currentStepKey);
 
     return Scaffold(
       backgroundColor: const Color(0xFFDCF7FF),
@@ -461,6 +515,7 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        automaticallyImplyLeading: false,
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -472,89 +527,86 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
               ),
             ),
             const SizedBox(width: 8),
-            Switch(
-              key: _keyAutoJumpToggle,
-              value: _isAutoJumpEnabled,
-              activeColor: Colors.blue,
-              onChanged: isAutoJumpActionStep
-                  ? (value) {
-                      setState(() => _isAutoJumpEnabled = value);
-                      _handleAction(_keyAutoJumpToggle);
-                    }
-                  : null,
-            ),
+                Switch(
+  key: _keyAutoJumpToggle,
+  value: _isAutoJumpEnabled,
+  activeColor: Colors.blue,
+
+  // ✅ Só fica clicável no passo: "Agora, ative Salto Automático para testá-lo."
+  onChanged: isAutoJumpActionStep
+      ? (value) {
+          setState(() => _isAutoJumpEnabled = value);
+
+          // como é um passo de ação, avançar ao interagir
+          _handleAction(_keyAutoJumpToggle);
+        }
+      : null, // 🔒 desabilita no passo informativo
+),
           ],
         ),
       ),
-      body: Column(
+      body: Stack(
         children: [
-          Expanded(
-            child: InformativeTutorialUI(
-              keyGrid: _keyGrid,
-              keyPalitoButtons: _keyPalitoButtons,
-              keyJoystick: _keyJoystick,
-              keyCharacter: _keyCharacter,
-              keyAutoJumpToggle: _keyAutoJumpToggle,
-              keyPalitoV: _keyPalitoV,
-              keyPalitoDD: _keyPalitoDD,
-              keyPalitoDE: _keyPalitoDE,
-              keyPalitoH: _keyPalitoH,
-              keyJumpUp: _keyJumpUp,
-              keyJumpDown: _keyJumpDown,
-              keyJumpLeft: _keyJumpLeft,
-              keyJumpRight: _keyJumpRight,
-              isAutoJumpEnabled: _isAutoJumpEnabled,
-              activeStepKey: currentStepKey,
-              onAutoJumpToggled: (value) {
-                setState(() => _isAutoJumpEnabled = value);
-                _handleAction(_keyAutoJumpToggle);
-              },
-              onPalitoVTapped: _onPalitoVTapped,
-              onPalitoDDTapped: _onPalitoDDTapped,
-              onPalitoDETapped: _onPalitoDETapped,
-              onPalitoHTapped: _onPalitoHTapped,
-              onJumpUp: () {
-                Provider.of<CharacterController>(context, listen: false)
-                    .moveUp();
-                _handleAction(_keyJumpUp);
-              },
-              onJumpDown: () {
-                Provider.of<CharacterController>(context, listen: false)
-                    .moveDown();
-                _handleAction(_keyJumpDown);
-              },
-              onJumpLeft: () {
-                Provider.of<CharacterController>(context, listen: false)
-                    .moveLeft();
-                _handleAction(_keyJumpLeft);
-              },
-              onJumpRight: () {
-                Provider.of<CharacterController>(context, listen: false)
-                    .moveRight();
-                _handleAction(_keyJumpRight);
-              },
-            ),
-          )
+          // Interface Principal
+          Column(
+            children: [
+              Expanded(
+                child: InformativeTutorialUI(
+                  keyGrid: _keyGrid,
+                  keyPalitoButtons: _keyPalitoButtons,
+                  keyJoystick: _keyJoystick,
+                  keyCharacter: _keyCharacter,
+                  keyAutoJumpToggle: _keyAutoJumpToggle,
+                  keyPalitoV: _keyPalitoV,
+                  keyPalitoDD: _keyPalitoDD,
+                  keyPalitoDE: _keyPalitoDE,
+                  keyPalitoH: _keyPalitoH,
+                  keyJumpUp: _keyJumpUp,
+                  keyJumpDown: _keyJumpDown,
+                  keyJumpLeft: _keyJumpLeft,
+                  keyJumpRight: _keyJumpRight,
+                  isAutoJumpEnabled: _isAutoJumpEnabled,
+                  activeStepKey: currentStepKey,
+                  // Aqui passamos a configuração que move o joystick
+                  isJoystickLeft: moveJoystickLeft,
+                  onAutoJumpToggled: (value) {
+                      if (!isAutoJumpActionStep) return;
+                     setState(() => _isAutoJumpEnabled = value);
+                     _handleAction(_keyAutoJumpToggle);
+                  },
+                  onPalitoVTapped: _onPalitoVTapped,
+                  onPalitoDDTapped: _onPalitoDDTapped,
+                  onPalitoDETapped: _onPalitoDETapped,
+                  onPalitoHTapped: _onPalitoHTapped,
+                  onJumpUp: () {
+                    Provider.of<CharacterController>(context, listen: false).moveUp();
+                    _handleAction(_keyJumpUp);
+                  },
+                  onJumpDown: () {
+                    Provider.of<CharacterController>(context, listen: false).moveDown();
+                    _handleAction(_keyJumpDown);
+                  },
+                  onJumpLeft: () {
+                    Provider.of<CharacterController>(context, listen: false).moveLeft();
+                    _handleAction(_keyJumpLeft);
+                  },
+                  onJumpRight: () {
+                    Provider.of<CharacterController>(context, listen: false).moveRight();
+                    _handleAction(_keyJumpRight);
+                  },
+                ),
+              ),
+            ],
+          ),
+
+          // VLibras sempre visível e fixo na direita (pois o joystick sairá da frente dele)
+          const Positioned(
+  bottom: 0,
+  right: 0,
+  child: ExcludeSemantics(child: VLibrasWidget()),
+),
         ],
       ),
     );
   }
-}
-
-class InvertedClipper extends CustomClipper<Path> {
-  final Rect rect;
-  final Radius radius;
-  InvertedClipper({required this.rect, required this.radius});
-  @override
-  Path getClip(Size size) {
-    return Path.combine(
-      PathOperation.difference,
-      Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height)),
-      Path()..addRRect(RRect.fromRectAndRadius(rect, radius)),
-    );
-  }
-
-  @override
-  bool shouldReclip(covariant InvertedClipper oldClipper) =>
-      oldClipper.rect != rect || oldClipper.radius != radius;
 }

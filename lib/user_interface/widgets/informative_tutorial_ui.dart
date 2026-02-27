@@ -23,6 +23,7 @@ class InformativeTutorialUI extends StatelessWidget {
   final GlobalKey? activeStepKey;
 
   final bool isAutoJumpEnabled;
+  final bool isJoystickLeft; // <--- NOVA PROPRIEDADE
   final ValueChanged<bool> onAutoJumpToggled;
   final VoidCallback onPalitoVTapped;
   final VoidCallback onPalitoDDTapped;
@@ -49,6 +50,7 @@ class InformativeTutorialUI extends StatelessWidget {
     required this.keyJumpLeft,
     required this.keyJumpRight,
     required this.isAutoJumpEnabled,
+    this.isJoystickLeft = false, // Padrão é direita
     required this.onAutoJumpToggled,
     required this.onPalitoVTapped,
     required this.onPalitoDDTapped,
@@ -77,6 +79,7 @@ class InformativeTutorialUI extends StatelessWidget {
                 Expanded(
                   child: Stack(
                     children: [
+                      // GRADE
                       Positioned.fill(
                         key: keyGrid,
                         child: CustomPaint(
@@ -89,6 +92,7 @@ class InformativeTutorialUI extends StatelessWidget {
                           ),
                         ),
                       ),
+                      // PALITOS
                       Consumer<PalitoController>(
                         builder: (_, palitoCtrl, __) {
                           return Stack(
@@ -107,6 +111,7 @@ class InformativeTutorialUI extends StatelessWidget {
                           );
                         },
                       ),                     
+                      // BOTÕES DE PALITO (Menu Esquerdo)
                        Positioned(
                         top: 16,
                         left: 16,
@@ -153,6 +158,7 @@ class InformativeTutorialUI extends StatelessWidget {
                         ),
                       ),
                       
+                      // PERSONAGEM
                       Consumer<CharacterController>(
                         builder: (_, ctrl, __) => Positioned(
                           key: keyCharacter,
@@ -165,9 +171,14 @@ class InformativeTutorialUI extends StatelessWidget {
                           ),
                         ),
                       ),
+
+                       // JOYSTICK (Movimenta-se baseada na propriedade isJoystickLeft)
                        Positioned(
                         bottom: 10,
-                        right: 16,
+                        // Se isJoystickLeft for true, fixa na esquerda (left: 16).
+                        // Se for false, fixa na direita (right: 16).
+                        left: isJoystickLeft ? 16 : null, 
+                        right: isJoystickLeft ? null : 16,
                         child: Container(
                           key: keyJoystick,
                           child: Row(

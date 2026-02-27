@@ -2,11 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mathsticks/user_interface/screens/mathsticks_screen.dart';
 import 'package:mathsticks/user_interface/screens/orientation_screen.dart';
-import 'package:mathsticks/user_interface/screens/practical_tutorial_screen.dart';
 import '../../services/tutorial_service.dart';
 import 'informative_tutorial_screen.dart'; 
-
-
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -26,31 +23,24 @@ class _SplashScreenState extends State<SplashScreen> {
     final tutorialService = TutorialService();
     await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
+
+    // Se completou o informativo (que agora é o unificado), vai pro App
+    final tutorialCompleted = await tutorialService.isInformativeTutorialCompleted();
+
     if (kIsWeb) {
-      final informativeCompleted = await tutorialService.isInformativeTutorialCompleted();
-      if (!mounted) return;
-      if (!informativeCompleted) {
+      if (!tutorialCompleted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const InformativeTutorialScreen()),
-        );
-        return;
-      }
-
-      final practicalCompleted = await tutorialService.isPracticalTutorialCompleted();
-      if (!mounted) return;
-      if (!practicalCompleted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const PracticalTutorialScreen()),
         );
       } else {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const Mathsticks()),
         );
       }
-
     } else {
       final orientationShown = await tutorialService.isOrientationShown();
       if (!mounted) return;
+      
       if (!orientationShown) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const OrientationScreen()),
@@ -58,20 +48,9 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
 
-      final informativeCompleted = await tutorialService.isInformativeTutorialCompleted();
-      if (!mounted) return;
-      if (!informativeCompleted) {
+      if (!tutorialCompleted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const InformativeTutorialScreen()),
-        );
-        return;
-      }
-      
-      final practicalCompleted = await tutorialService.isPracticalTutorialCompleted();
-      if (!mounted) return;
-      if (!practicalCompleted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const PracticalTutorialScreen()),
         );
       } else {
         Navigator.of(context).pushReplacement(

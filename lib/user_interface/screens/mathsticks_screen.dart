@@ -1265,7 +1265,7 @@ class _MathsticksState extends State<Mathsticks> {
                               },
                               child: Semantics(
                                 label:
-                                    'Personagem Beija-Flor, toque duas vezes para ouvir sua posição na tela, com a narração ativada',
+                                    'Personagem pássaro, toque duas vezes para ouvir sua posição na tela, com a narração ativada',
                                 image: false,
                                 child: Image.asset(
                                   'assets/images/personagem.png',

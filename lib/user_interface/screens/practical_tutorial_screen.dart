@@ -7,6 +7,7 @@ import '../../../services/tutorial_service.dart';
 import '../screens/mathsticks_screen.dart';
 import '../widgets/practical_tutorial_ui.dart';
 import 'package:flutter/services.dart';
+import '../widgets/vlibras_widget.dart';
 
 enum TutorialPhase { manual, autoJump }
 
@@ -173,6 +174,23 @@ class _PracticalTutorialScreenState extends State<PracticalTutorialScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _showHighlight());
   }
+
+  bool _stepFicaNaDireita(GlobalKey key) {
+  // botões do canto inferior direito (joystick)
+  return key == _keyJumpUp ||
+      key == _keyJumpDown ||
+      key == _keyJumpLeft ||
+      key == _keyJumpRight;
+}
+
+Alignment _vlibrasAlignmentForStep(GlobalKey key) {
+  // Se o passo é em botões da direita, joga o VLibras para esquerda
+  if (_stepFicaNaDireita(key)) return Alignment.bottomLeft;
+
+  // Caso contrário, deixa no canto padrão
+  return Alignment.bottomRight;
+}
+
 
   void _onAction(Function action) {
     action();
@@ -352,6 +370,12 @@ class _PracticalTutorialScreenState extends State<PracticalTutorialScreen> {
     if (_currentStepIndex >= steps.length) return;
     final step = steps[_currentStepIndex];
 
+    // --- ADIÇÃO 1: Enviar texto para VLibras ---
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      VLibrasWidget.buscarTraducao(step.instruction);
+    });
+    // -------------------------------------------
+
     if (step.targetKey.currentContext == null) {
       Future.delayed(const Duration(milliseconds: 100), () {
         if (mounted) _showHighlight();
@@ -393,13 +417,13 @@ class _PracticalTutorialScreenState extends State<PracticalTutorialScreen> {
         type: MaterialType.transparency,
         child: Stack(
           children: [
-            IgnorePointer(
-              child: ClipPath(
-                clipper: InvertedClipper(
-                    rect: highlightRect, radius: const Radius.circular(12)),
-                child: Container(color: Colors.black.withOpacity(0.7)),
-              ),
-            ),
+            // IgnorePointer(
+            //   child: ClipPath(
+            //     clipper: InvertedClipper(
+            //         rect: highlightRect, radius: const Radius.circular(12)),
+            //     child: Container(color: Colors.black.withOpacity(0.7)),
+            //   ),
+            // ),
             Positioned.fromRect(
               rect: highlightRect,
               child: IgnorePointer(
@@ -466,6 +490,13 @@ class _PracticalTutorialScreenState extends State<PracticalTutorialScreen> {
                 ],
               ),
             ),
+            // const Positioned(
+            //   bottom: 0,
+            //   right: 0,
+            //   child: ExcludeSemantics(
+            //     child: VLibrasWidget(),
+            //   ),
+            // ),
           ],
         ),
       );
@@ -606,6 +637,7 @@ class _PracticalTutorialScreenState extends State<PracticalTutorialScreen> {
     final bool isAutoJumpStepActive = _currentPhase == TutorialPhase.autoJump &&
         steps.isNotEmpty &&
         steps[_currentStepIndex].targetKey == _keyAutoJumpToggle;
+        final alignment = _vlibrasAlignmentForStep(currentStepKey);
 
     return Scaffold(
         backgroundColor: const Color.fromRGBO(220, 247, 255, 1.0),
@@ -637,46 +669,70 @@ class _PracticalTutorialScreenState extends State<PracticalTutorialScreen> {
             ],
           ),
         ),
-        body: Column(children: [
-          Expanded(
-            child: PracticalTutorialUI(
-              keyPalitoV: _keyPalitoV,
-              keyPalitoH: _keyPalitoH,
-              keyPalitoDD: _keyPalitoDD,
-              keyPalitoDE: _keyPalitoDE,
-              keyJumpUp: _keyJumpUp,
-              keyJumpDown: _keyJumpDown,
-              keyJumpLeft: _keyJumpLeft,
-              keyJumpRight: _keyJumpRight,
-              keyAutoJumpToggle: _keyAutoJumpToggle,
-              isAutoJumpEnabled: _isAutoJumpEnabled,
-              currentPhase: _currentPhase,
-              activeStepKey: currentStepKey,
-              onPalitoVTapped: () => _addPalito('Palito V', 'Palito Vertical'),
-              onPalitoHTapped: () =>
-                  _addPalito('Palito H', 'Palito Horizontal'),
-              onPalitoDDTapped: () =>
-                  _addPalito('Palito DD', 'Palito Diagonal a Direita'),
-              onPalitoDETapped: () =>
-                  _addPalito('Palito DE', 'Palito diagonal a Esquerda'),
-              onJumpUp: () => _onAction(_characterController.moveUp),
-              onJumpDown: () => _onAction(_characterController.moveDown),
-              onJumpLeft: () => _onAction(_characterController.moveLeft),
-              onJumpRight: () => _onAction(_characterController.moveRight),
-              onAutoJumpToggled: (value) {
-                setState(() => _isAutoJumpEnabled = value);
-                final currentSteps = _currentPhase == TutorialPhase.autoJump
-                    ? _autoJumpTutorialSteps
-                    : [];
-                if (currentSteps.isNotEmpty &&
-                    currentSteps[_currentStepIndex].targetKey ==
-                        _keyAutoJumpToggle) {
-                  _nextStep();
-                }
-              },
-            ),
-          )
-        ]));
+       body: Stack(
+  children: [
+    // ✅ Quando for joystick: VLibras atrás
+    if (_stepFicaNaDireita(currentStepKey))
+      Align(
+        alignment: alignment,
+        child: const Padding(
+          padding: EdgeInsets.all(8),
+          child: ExcludeSemantics(child: VLibrasWidget()),
+        ),
+      ),
+
+    Column(
+      children: [
+        Expanded(
+          child: PracticalTutorialUI(
+            keyPalitoV: _keyPalitoV,
+            keyPalitoH: _keyPalitoH,
+            keyPalitoDD: _keyPalitoDD,
+            keyPalitoDE: _keyPalitoDE,
+            keyJumpUp: _keyJumpUp,
+            keyJumpDown: _keyJumpDown,
+            keyJumpLeft: _keyJumpLeft,
+            keyJumpRight: _keyJumpRight,
+            keyAutoJumpToggle: _keyAutoJumpToggle,
+            isAutoJumpEnabled: _isAutoJumpEnabled,
+            currentPhase: _currentPhase,
+            activeStepKey: currentStepKey,
+            onPalitoVTapped: () => _addPalito('Palito V', 'Palito Vertical'),
+            onPalitoHTapped: () => _addPalito('Palito H', 'Palito Horizontal'),
+            onPalitoDDTapped: () => _addPalito('Palito DD', 'Palito Diagonal a Direita'),
+            onPalitoDETapped: () => _addPalito('Palito DE', 'Palito diagonal a Esquerda'),
+            onJumpUp: () => _onAction(_characterController.moveUp),
+            onJumpDown: () => _onAction(_characterController.moveDown),
+            onJumpLeft: () => _onAction(_characterController.moveLeft),
+            onJumpRight: () => _onAction(_characterController.moveRight),
+            onAutoJumpToggled: (value) {
+              setState(() => _isAutoJumpEnabled = value);
+              final currentSteps = _currentPhase == TutorialPhase.autoJump
+                  ? _autoJumpTutorialSteps
+                  : [];
+              if (currentSteps.isNotEmpty &&
+                  currentSteps[_currentStepIndex].targetKey == _keyAutoJumpToggle) {
+                _nextStep();
+              }
+            },
+          ),
+        ),
+      ],
+    ),
+
+    // ✅ Quando NÃO for joystick: VLibras por cima (padrão)
+    if (!_stepFicaNaDireita(currentStepKey))
+      Align(
+        alignment: alignment,
+        child: const Padding(
+          padding: EdgeInsets.all(8),
+          child: ExcludeSemantics(child: VLibrasWidget()),
+        ),
+      ),
+  ],
+),
+
+        );
   }
 }
 

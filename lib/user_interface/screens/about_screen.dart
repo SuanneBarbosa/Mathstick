@@ -66,7 +66,7 @@ class AboutScreen extends StatelessWidget {
             _buildFeatureItem(
               Icons.drag_handle,
               'Movimentação Livre:',
-              'Arraste o personagem (beija-flor) pela tela ou utilize o joystick para uma exploração precisa do espaço de criação.',
+              'Arraste o personagem pássaro pela tela ou utilize o joystick para uma exploração precisa do espaço de criação.',
             ),
             _buildFeatureItem(
               Icons.architecture,
