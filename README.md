@@ -16,3 +16,5 @@ Este é o aplicativo Flutter "Mathsticks", um projeto educativo.
 ## Como gerar o app
 1. Execute 
     flutter build apk --release
+
+.
