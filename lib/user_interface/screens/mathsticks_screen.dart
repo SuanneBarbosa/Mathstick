@@ -138,13 +138,13 @@ class _MathsticksState extends State<Mathsticks> {
 
   String _getPalitoFriendlyDescription(String palitoType) {
     switch (palitoType) {
-      case "Palito V":
+      case "palito_v":
         return "vertical";
-      case "Palito H":
+      case "palito_h":
         return "horizontal";
-      case "Palito DD":
+      case "palito_dd":
         return "diagonal para a direita";
-      case "Palito DE":
+      case "palito_de":
         return "diagonal para a esquerda";
       default:
         return "desconhecido";
@@ -371,10 +371,10 @@ class _MathsticksState extends State<Mathsticks> {
   }
 
   static final Map<String, String> _actionLabels = {
-    'Palito V': 'Palito V',
-    'Palito H': 'Palito H',
-    'Palito DD': 'Palito DD',
-    'Palito DE': 'Palito DE',
+    'palito_v': 'Palito V',
+    'palito_h': 'Palito H',
+    'palito_dd': 'Palito DD',
+    'palito_de': 'Palito DE',
     'Cima': 'Cima',
     'Baixo': 'Baixo',
     'Esquerda': 'Esquerda',
@@ -395,19 +395,19 @@ class _MathsticksState extends State<Mathsticks> {
         label: 'Saltar para Direita',
         type: StoryActionType.move),
     DropdownOption(
-        value: 'Palito V',
+        value: 'palito_v',
         label: 'Palito Vertical',
         type: StoryActionType.palito),
     DropdownOption(
-        value: 'Palito H',
+        value: 'palito_h',
         label: 'Palito Horizontal',
         type: StoryActionType.palito),
     DropdownOption(
-        value: 'Palito DD',
+        value: 'palito_dd',
         label: 'Palito Diagonal à Direita',
         type: StoryActionType.palito),
     DropdownOption(
-        value: 'Palito DE',
+        value: 'palito_de',
         label: 'Palito Diagonal à Esquerda',
         type: StoryActionType.palito),
   ];
@@ -476,7 +476,7 @@ class _MathsticksState extends State<Mathsticks> {
     double baseOffsetX = 0, baseOffsetY = 0;
 
     switch (action.palitoType) {
-      case "Palito V":
+      case "palito_v":
         baseOffsetX = 24;
         baseOffsetY = -50;
         if (_isNarrationEnabled) {
@@ -486,7 +486,7 @@ class _MathsticksState extends State<Mathsticks> {
           );
         }
         break;
-      case "Palito DD":
+      case "palito_dd":
         baseOffsetX = 36;
         baseOffsetY = -45;
         if (_isNarrationEnabled) {
@@ -496,7 +496,7 @@ class _MathsticksState extends State<Mathsticks> {
           );
         }
         break;
-      case "Palito DE":
+      case "palito_de":
         baseOffsetX = 13;
         baseOffsetY = -45;
         if (_isNarrationEnabled) {
@@ -506,7 +506,7 @@ class _MathsticksState extends State<Mathsticks> {
           );
         }
         break;
-      case "Palito H":
+      case "palito_h":
         baseOffsetX = 48;
         baseOffsetY = -27;
 
@@ -526,21 +526,21 @@ class _MathsticksState extends State<Mathsticks> {
     double offsetX = 0, offsetY = 0;
 
     switch (action.palitoType) {
-      case "Palito V":
+      case "palito_v":
         offsetX = baseOffsetX + (sizeDiff / 10) * 5;
         offsetY = baseOffsetY - (sizeDiff / 10) * 10;
         break;
-      case "Palito H":
+      case "palito_h":
         offsetX = baseOffsetX + sizeDiff;
         offsetY = baseOffsetY - (sizeDiff / 10) * 5;
 
         break;
-      case "Palito DD":
+      case "palito_dd":
         offsetX = baseOffsetX + (sizeDiff / 10) * 7;
         offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
 
         break;
-      case "Palito DE":
+      case "palito_de":
         offsetX = baseOffsetX + (sizeDiff / 10) * 3;
         offsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
         break;
@@ -1282,7 +1282,7 @@ class _MathsticksState extends State<Mathsticks> {
                         child: Column(
                           children: [
                             MenuButton(
-                              iconPath: 'assets/images/Palito V.png',
+                              iconPath: 'assets/images/palito_v.png',
                               label: "Palito V",
                               tooltip: "Adicionar palito vertical",
                               semanticsLabel: "Palito Vertical",
@@ -1296,14 +1296,14 @@ class _MathsticksState extends State<Mathsticks> {
 
                                 final position =
                                     palitoController.getPositionForNewPalito(
-                                  "Palito V",
+                                  "palito_v",
                                   Offset(characterController.xPosition,
                                       characterController.yPosition),
                                   _palitoSize,
                                 );
                                 Palito tempPalito = Palito(
                                     position: position,
-                                    type: "Palito V",
+                                    type: "palito_v",
                                     semanticsLabel: "Palito vertical",
                                     size: _palitoSize);
 
@@ -1324,7 +1324,7 @@ class _MathsticksState extends State<Mathsticks> {
                                   );
                                   return;
                                 }
-                                palitoController.addPalito(position, "Palito V",
+                                palitoController.addPalito(position, "palito_v",
                                     "Palito vertical", _palitoSize);
                                 if (_isNarrationEnabled) {
                                   _announceNewPalitoLocation(tempPalito);
@@ -1355,7 +1355,7 @@ class _MathsticksState extends State<Mathsticks> {
                               },
                             ),
                             MenuButton(
-                              iconPath: 'assets/images/Palito DD.png',
+                              iconPath: 'assets/images/palito_dd.png',
                               label: "Palito DD",
                               tooltip: "Adicionar palito diagonal à direita",
                               semanticsLabel: "Palito Diagonal à Direita",
@@ -1369,7 +1369,7 @@ class _MathsticksState extends State<Mathsticks> {
 
                                 final position =
                                     palitoController.getPositionForNewPalito(
-                                  "Palito DD",
+                                  "palito_dd",
                                   Offset(characterController.xPosition,
                                       characterController.yPosition),
                                   _palitoSize,
@@ -1377,7 +1377,7 @@ class _MathsticksState extends State<Mathsticks> {
 
                                 Palito tempPalito = Palito(
                                     position: position,
-                                    type: "Palito DD",
+                                    type: "palito_dd",
                                     semanticsLabel: "Palito Diagonal à Direita",
                                     size: _palitoSize);
 
@@ -1401,7 +1401,7 @@ class _MathsticksState extends State<Mathsticks> {
 
                                 palitoController.addPalito(
                                     position,
-                                    "Palito DD",
+                                    "palito_dd",
                                     "Palito Diagonal à Direita",
                                     _palitoSize);
                                 if (_isNarrationEnabled) {
@@ -1433,7 +1433,7 @@ class _MathsticksState extends State<Mathsticks> {
                               },
                             ),
                             MenuButton(
-                              iconPath: 'assets/images/Palito DE.png',
+                              iconPath: 'assets/images/palito_de.png',
                               label: "Palito DE",
                               tooltip: "Adicionar palito diagonal à esquerda",
                               semanticsLabel: "Palito Diagonal à Esquerda",
@@ -1450,7 +1450,7 @@ class _MathsticksState extends State<Mathsticks> {
                                     MediaQuery.of(context).size.height;
                                 final position =
                                     palitoController.getPositionForNewPalito(
-                                  "Palito DE",
+                                  "palito_de",
                                   Offset(characterController.xPosition,
                                       characterController.yPosition),
                                   _palitoSize,
@@ -1458,7 +1458,7 @@ class _MathsticksState extends State<Mathsticks> {
 
                                 Palito tempPalito = Palito(
                                     position: position,
-                                    type: "Palito DE",
+                                    type: "palito_de",
                                     semanticsLabel:
                                         "Palito Diagonal à Esquerda",
                                     size: _palitoSize);
@@ -1483,7 +1483,7 @@ class _MathsticksState extends State<Mathsticks> {
 
                                 palitoController.addPalito(
                                     position,
-                                    "Palito DE",
+                                    "palito_de",
                                     "Palito Diagonal à Esquerda",
                                     _palitoSize);
 
@@ -1493,7 +1493,7 @@ class _MathsticksState extends State<Mathsticks> {
                               },
                             ),
                             MenuButton(
-                                iconPath: 'assets/images/Palito H.png',
+                                iconPath: 'assets/images/palito_h.png',
                                 label: "Palito H",
                                 tooltip: "Adicionar palito horizontal",
                                 semanticsLabel: "Palito Horizontal",
@@ -1506,14 +1506,14 @@ class _MathsticksState extends State<Mathsticks> {
                                           listen: false);
                                   final position =
                                       palitoController.getPositionForNewPalito(
-                                    "Palito H",
+                                    "palito_h",
                                     Offset(characterController.xPosition,
                                         characterController.yPosition),
                                     _palitoSize,
                                   );
                                   Palito tempPalito = Palito(
                                       position: position,
-                                      type: "Palito H",
+                                      type: "palito_h",
                                       semanticsLabel: "Palito Horizontal",
                                       size: _palitoSize);
                                   if (tempPalito.isPartiallyOffscreen(
@@ -1536,9 +1536,15 @@ class _MathsticksState extends State<Mathsticks> {
 
                                   palitoController.addPalito(
                                       position,
-                                      "Palito H",
+                                      "palito_h",
                                       "Palito Horizontal",
                                       _palitoSize);
+
+                                  if (_isNarrationEnabled) {
+                                    await _announceNewPalitoLocation(
+                                        tempPalito);
+                                  }
+
                                   if (_isAutoCompleteJumpEnabled) {
                                     final bool moveSuccessful =
                                         characterController.moveRight();
@@ -1546,8 +1552,8 @@ class _MathsticksState extends State<Mathsticks> {
                                     if (moveSuccessful) {
                                       if (_isNarrationEnabled) {
                                         await _announceNextPalitoLocation();
-                                        await _announceNewPalitoLocation(
-                                            tempPalito);
+                                        // await _announceNewPalitoLocation(
+                                        //     tempPalito);
                                       }
                                     } else {
                                       const String borderMessage =

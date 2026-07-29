@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/Users/suann/projetos-flutter/mathsticks_app/m/mathsticks/windows"
+  "cmake.sourceDirectory": "C:/Users/suann/projetos-flutter/mathsticks_app/m/mathsticks/windows",
+  "dart.flutterSdkPath": ".fvm/versions/3.29.3"
 }

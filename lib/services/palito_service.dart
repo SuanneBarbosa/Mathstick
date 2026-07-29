@@ -82,25 +82,25 @@ class PalitoController extends ChangeNotifier {
     double finalOffsetX = 0, finalOffsetY = 0;
 
     switch (palitoType) {
-      case "Palito V":
+      case "palito_v":
         baseOffsetX = 24;
         baseOffsetY = -50;
         finalOffsetX = baseOffsetX + (sizeDiff / 10) * 5;
         finalOffsetY = baseOffsetY - (sizeDiff / 10) * 10;
         break;
-      case "Palito DD":
+      case "palito_dd":
         baseOffsetX = 36;
         baseOffsetY = -45;
         finalOffsetX = baseOffsetX + (sizeDiff / 10) * 7;
         finalOffsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
         break;
-      case "Palito DE":
+      case "palito_de":
         baseOffsetX = 13;
         baseOffsetY = -45;
         finalOffsetX = baseOffsetX + (sizeDiff / 10) * 3;
         finalOffsetY = baseOffsetY - (sizeDiff / 10) * 9.5;
         break;
-      case "Palito H":
+      case "palito_h":
         baseOffsetX = 48;
         baseOffsetY = -27;
         finalOffsetX = baseOffsetX + sizeDiff;
@@ -117,7 +117,7 @@ class PalitoController extends ChangeNotifier {
   
   void addPalito(
       Offset position, String type, String semanticsLabel, double size) {
-    const validTypes = ["Palito V", "Palito DD", "Palito DE", "Palito H"];
+    const validTypes = ["palito_v", "palito_dd", "palito_de", "palito_h"];
     if (!validTypes.contains(type)) {
       throw ArgumentError("Tipo de palito inválido: $type");
     }

@@ -1,9 +1,8 @@
-import 'package:flutter/foundation.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:mathsticks/user_interface/screens/mathsticks_screen.dart';
-import 'package:mathsticks/user_interface/screens/orientation_screen.dart';
+import 'package:flutter/services.dart';
 import '../../services/tutorial_service.dart';
-import 'informative_tutorial_screen.dart'; 
+import 'enter_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -13,67 +12,164 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  double _opacity = 0.0;
+  Timer? _timer;
+  bool _orientationShown = false;
+  bool _tutorialCompleted = false;
+
   @override
   void initState() {
     super.initState();
-    _checkStatusAndNavigate();
+
+    // Trava a orientação para vertical no início
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+
+    // Carrega o status do tutorial/orientação em segundo plano
+    _loadStatus();
+
+    // Trigger de animação de fade in
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {
+          _opacity = 1.0;
+        });
+      }
+    });
+
+    // Auto navigate after 3 seconds
+    _timer = Timer(const Duration(seconds: 3), _navigateToEnterScreen);
   }
 
-  Future<void> _checkStatusAndNavigate() async {
+  Future<void> _loadStatus() async {
     final tutorialService = TutorialService();
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
+    final orientationShown = await tutorialService.isOrientationShown();
+    final tutorialCompleted =
+        await tutorialService.isInformativeTutorialCompleted();
+    if (mounted) {
+      setState(() {
+        _orientationShown = orientationShown;
+        _tutorialCompleted = tutorialCompleted;
+      });
+    }
+  }
 
-    // Se completou o informativo (que agora é o unificado), vai pro App
-    final tutorialCompleted = await tutorialService.isInformativeTutorialCompleted();
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
-    if (kIsWeb) {
-      if (!tutorialCompleted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const InformativeTutorialScreen()),
-        );
-      } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const Mathsticks()),
-        );
-      }
-    } else {
-      final orientationShown = await tutorialService.isOrientationShown();
-      if (!mounted) return;
-      
-      if (!orientationShown) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OrientationScreen()),
-        );
-        return;
-      }
-
-      if (!tutorialCompleted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const InformativeTutorialScreen()),
-        );
-      } else {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const Mathsticks()),
-        );
-      }
+  void _navigateToEnterScreen() {
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => EnterScreen(
+            orientationShown: _orientationShown,
+            tutorialCompleted: _tutorialCompleted,
+          ),
+        ),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color.fromRGBO(220, 247, 255, 1.0),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 20),
-            Text('Carregando...', style: TextStyle(fontSize: 18)),
-          ],
-        ),
+    return Scaffold(
+      backgroundColor: const Color(0xFF2563EB),
+      body: Stack(
+        children: [
+          // Centered main logo with fade-in effect
+          Center(
+            child: AnimatedOpacity(
+              opacity: _opacity,
+              duration: const Duration(milliseconds: 2000),
+              curve: Curves.easeInOut,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedScale(
+                    scale: _opacity == 1.0 ? 1.0 : 0.7,
+                    duration: const Duration(milliseconds: 2000),
+                    curve: Curves.easeOutBack,
+                    child: Hero(
+                      tag: 'app_logo',
+                      child: Image.asset(
+                        'assets/images/logo/mathsticks.png',
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.music_note_rounded,
+                            size: 200,
+                            color: Color(0xFF4F46E5),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+
+          // Supporters logo in the bottom area (centered badge)
+          Positioned(
+            bottom: 24,
+            left: 24,
+            right: 24,
+            child: AnimatedOpacity(
+              opacity: _opacity,
+              duration: const Duration(milliseconds: 1200),
+              curve: Curves.easeInOut,
+              child: Center(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _buildSupporterLogo('assets/images/CNPQ_Logo.png'),
+                      const SizedBox(width: 16),
+                      _buildSupporterLogo('assets/images/IFSP_Logo.png'),
+                      const SizedBox(width: 16),
+                      _buildSupporterLogo('assets/images/RUMO_Logo.png'),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildSupporterLogo(String assetPath) {
+    return Image.asset(
+      assetPath,
+      height: 56,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return const SizedBox.shrink();
+      },
     );
   }
 }

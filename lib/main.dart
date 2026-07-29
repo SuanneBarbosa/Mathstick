@@ -3,7 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'services/character_service.dart';
 import 'services/palito_service.dart';
+import 'services/tutorial_service.dart';
 import 'user_interface/screens/splash_screen.dart'; 
+import 'user_interface/screens/informative_tutorial_screen.dart';
+import 'user_interface/screens/mathsticks_screen.dart';
 import 'package:flutter/foundation.dart';
 
 void main() async {
@@ -11,8 +14,8 @@ void main() async {
 
  if (!kIsWeb) {
     SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
     ]);
   }
   runApp(const Main());
@@ -28,10 +31,50 @@ class Main extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CharacterController()),
         ChangeNotifierProvider(create: (_) => PalitoController()), 
       ],
-      child: const MaterialApp(
+      child: MaterialApp(
         title: 'Mathsticks',
-        home: SplashScreen(),
+        home: kIsWeb ? const WebHome() : const SplashScreen(),
       ),
     );
+  }
+}
+
+class WebHome extends StatefulWidget {
+  const WebHome({super.key});
+
+  @override
+  State<WebHome> createState() => _WebHomeState();
+}
+
+class _WebHomeState extends State<WebHome> {
+  bool? _tutorialCompleted;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkTutorial();
+  }
+
+  Future<void> _checkTutorial() async {
+    final completed = await TutorialService().isInformativeTutorialCompleted();
+    if (mounted) {
+      setState(() {
+        _tutorialCompleted = completed;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_tutorialCompleted == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+    return _tutorialCompleted!
+        ? const Mathsticks()
+        : const InformativeTutorialScreen();
   }
 }

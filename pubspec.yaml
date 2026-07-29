@@ -22,7 +22,8 @@ dependencies:
   flutter_tts: ^3.8.5 
   just_audio: ^0.9.42
   async: ^2.9.0
-  shared_preferences: ^2.2.3  
+  shared_preferences: ^2.2.3 
+  webview_flutter: ^4.4.0 
 
 dev_dependencies:
   flutter_test:
@@ -34,10 +35,10 @@ flutter:
 
   uses-material-design: true
   assets:
-    - assets/images/Palito V.png
-    - assets/images/Palito H.png
-    - assets/images/Palito DD.png
-    - assets/images/Palito DE.png
+    - assets/images/palito_v.png
+    - assets/images/palito_h.png
+    - assets/images/palito_dd.png
+    - assets/images/palito_de.png
     - assets/images/pulare.png
     - assets/images/pulard.png
     - assets/images/pularc.png
@@ -55,6 +56,7 @@ flutter:
     - assets/images/IFSP_Logo.png
     - assets/images/CNPQ_Logo.png
     - assets/images/RUMO_Logo.png
+    - assets/images/logo/mathsticks.png
    
   fonts:
     - family: Poppins

@@ -80,26 +80,28 @@ class _PracticalTutorialScreenState extends State<PracticalTutorialScreen> {
         targetKey: _keyPalitoH,
         instruction:
             'Fase 1: Controle Manual.\nVamos fazer um quadrado. Comece adicionando um Palito Horizontal.',
-        palitoType: 'Palito H',
+        palitoType: 'palito_h',
       ),
       TutorialStep(
         targetKey: _keyPalitoV,
         instruction: 'Perfeito. Adicione um Palito Vertical.',
-        palitoType: 'Palito V',
+        palitoType: 'palito_v',
       ),
       TutorialStep(
         targetKey: _keyJumpRight,
-        instruction: 'Ótimo! Agora mova o personagem clicando no botão Saltar Para Direita.',
+        instruction:
+            'Ótimo! Agora mova o personagem clicando no botão Saltar Para Direita.',
         movementAction: _characterController.moveRight,
       ),
       TutorialStep(
         targetKey: _keyPalitoV,
         instruction: 'Perfeito. Adicione um Palito Vertical.',
-        palitoType: 'Palito V',
+        palitoType: 'palito_v',
       ),
       TutorialStep(
         targetKey: _keyJumpUp,
-        instruction: 'Excelente! Agora, mova o personagem no botao Saltar Para cima.',
+        instruction:
+            'Excelente! Agora, mova o personagem no botao Saltar Para cima.',
         movementAction: _characterController.moveUp,
       ),
       TutorialStep(
@@ -109,9 +111,8 @@ class _PracticalTutorialScreenState extends State<PracticalTutorialScreen> {
       ),
       TutorialStep(
         targetKey: _keyPalitoH,
-        instruction:
-            'Para fechar o quadrado, adicione um Palito Horizontal.',
-        palitoType: 'Palito H',
+        instruction: 'Para fechar o quadrado, adicione um Palito Horizontal.',
+        palitoType: 'palito_h',
       ),
     ];
 
@@ -125,13 +126,13 @@ class _PracticalTutorialScreenState extends State<PracticalTutorialScreen> {
         targetKey: _keyPalitoH,
         instruction:
             'Agora, adicione um Palito Horizontal. O personagem saltará sozinho!',
-        palitoType: 'Palito H',
+        palitoType: 'palito_h',
       ),
       TutorialStep(
         targetKey: _keyPalitoV,
         instruction:
             'Ele deu um salto para a direita! Agora adicione um Palito Vertical.',
-        palitoType: 'Palito V',
+        palitoType: 'palito_v',
       ),
       TutorialStep(
         targetKey: _keyJumpLeft,
@@ -140,24 +141,25 @@ class _PracticalTutorialScreenState extends State<PracticalTutorialScreen> {
       ),
       TutorialStep(
         targetKey: _keyJumpDown,
-        instruction: 'Excelente! Agora, mova o personagem no botão Saltar Para Baixo.',
+        instruction:
+            'Excelente! Agora, mova o personagem no botão Saltar Para Baixo.',
         movementAction: _characterController.moveDown,
       ),
       TutorialStep(
         targetKey: _keyPalitoV,
         instruction:
             'Perfeito! Adicione outro Palito Vertical e ele também saltará para cima.',
-        palitoType: 'Palito V',
+        palitoType: 'palito_v',
       ),
       TutorialStep(
         targetKey: _keyPalitoH,
         instruction:
             'Para finalizar o exercício, adicione um Palito Horizontal.',
-        palitoType: 'Palito H',
+        palitoType: 'palito_h',
       ),
     ];
   }
-  
+
   void _startInteractiveTutorial() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _palitoController.clearPalitos();
@@ -176,21 +178,20 @@ class _PracticalTutorialScreenState extends State<PracticalTutorialScreen> {
   }
 
   bool _stepFicaNaDireita(GlobalKey key) {
-  // botões do canto inferior direito (joystick)
-  return key == _keyJumpUp ||
-      key == _keyJumpDown ||
-      key == _keyJumpLeft ||
-      key == _keyJumpRight;
-}
+    // botões do canto inferior direito (joystick)
+    return key == _keyJumpUp ||
+        key == _keyJumpDown ||
+        key == _keyJumpLeft ||
+        key == _keyJumpRight;
+  }
 
-Alignment _vlibrasAlignmentForStep(GlobalKey key) {
-  // Se o passo é em botões da direita, joga o VLibras para esquerda
-  if (_stepFicaNaDireita(key)) return Alignment.bottomLeft;
+  Alignment _vlibrasAlignmentForStep(GlobalKey key) {
+    // Se o passo é em botões da direita, joga o VLibras para esquerda
+    if (_stepFicaNaDireita(key)) return Alignment.bottomLeft;
 
-  // Caso contrário, deixa no canto padrão
-  return Alignment.bottomRight;
-}
-
+    // Caso contrário, deixa no canto padrão
+    return Alignment.bottomRight;
+  }
 
   void _onAction(Function action) {
     action();
@@ -204,7 +205,8 @@ Alignment _vlibrasAlignmentForStep(GlobalKey key) {
   }
 
   void _addPalito(String type, String label) {
-    final position = _palitoController.getPositionForNewPalito(type,
+    final position = _palitoController.getPositionForNewPalito(
+        type,
         Offset(_characterController.xPosition, _characterController.yPosition),
         _characterController.characterSize);
 
@@ -222,13 +224,13 @@ Alignment _vlibrasAlignmentForStep(GlobalKey key) {
 
     if (_isAutoJumpEnabled && _currentPhase == TutorialPhase.autoJump) {
       switch (type) {
-        case 'Palito V':
+        case 'palito_v':
           _characterController.moveUp();
           break;
-        case 'Palito H':
+        case 'palito_h':
           _characterController.moveRight();
           break;
-        case 'Palito DD':
+        case 'palito_dd':
           _characterController.moveRight();
           break;
       }
@@ -254,7 +256,8 @@ Alignment _vlibrasAlignmentForStep(GlobalKey key) {
           );
         } else {
           _showPhaseCompletionMessage(
-            message: "Você concluiu a Fase 2 e fez um quadrado utilizando o Salto Automático. O tutorial está completo agora é com você!",
+            message:
+                "Você concluiu a Fase 2 e fez um quadrado utilizando o Salto Automático. O tutorial está completo agora é com você!",
             onAcknowledge: () => _completeAndNavigate(context),
           );
         }
@@ -262,16 +265,18 @@ Alignment _vlibrasAlignmentForStep(GlobalKey key) {
     });
   }
 
-  void _showPhaseCompletionMessage({required String message, required VoidCallback onAcknowledge}) {
+  void _showPhaseCompletionMessage(
+      {required String message, required VoidCallback onAcknowledge}) {
     _removeHighlight();
-    
-    final String semanticLabel = "Fase Concluída! $message. Clique no botão continuar.";
+
+    final String semanticLabel =
+        "Fase Concluída! $message. Clique no botão continuar.";
 
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: null, 
+        title: null,
         content: Semantics(
           label: semanticLabel,
           child: ExcludeSemantics(
@@ -317,7 +322,7 @@ Alignment _vlibrasAlignmentForStep(GlobalKey key) {
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
         title: null,
-        content: Focus( 
+        content: Focus(
           focusNode: _phase2DialogFocusNode,
           autofocus: true,
           child: Semantics(
@@ -327,12 +332,12 @@ Alignment _vlibrasAlignmentForStep(GlobalKey key) {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                   Text(
+                  Text(
                     "Fase 2: Salto Automático",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                   SizedBox(height: 16),
-                   Text(
+                  SizedBox(height: 16),
+                  Text(
                     "Ótimo! Agora vamos aprender a usar o Salto Automático. Após ativá-lo, o personagem se moverá sozinho sempre que você adicionar um palito.",
                   ),
                 ],
@@ -370,11 +375,9 @@ Alignment _vlibrasAlignmentForStep(GlobalKey key) {
     if (_currentStepIndex >= steps.length) return;
     final step = steps[_currentStepIndex];
 
-    // --- ADIÇÃO 1: Enviar texto para VLibras ---
     WidgetsBinding.instance.addPostFrameCallback((_) {
       VLibrasWidget.buscarTraducao(step.instruction);
     });
-    // -------------------------------------------
 
     if (step.targetKey.currentContext == null) {
       Future.delayed(const Duration(milliseconds: 100), () {
@@ -637,102 +640,105 @@ Alignment _vlibrasAlignmentForStep(GlobalKey key) {
     final bool isAutoJumpStepActive = _currentPhase == TutorialPhase.autoJump &&
         steps.isNotEmpty &&
         steps[_currentStepIndex].targetKey == _keyAutoJumpToggle;
-        final alignment = _vlibrasAlignmentForStep(currentStepKey);
+    final alignment = _vlibrasAlignmentForStep(currentStepKey);
 
     return Scaffold(
-        backgroundColor: const Color.fromRGBO(220, 247, 255, 1.0),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          centerTitle: true,
-          automaticallyImplyLeading: false,
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Salto Automático',
-                style:
-                    TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+      backgroundColor: const Color.fromRGBO(220, 247, 255, 1.0),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        automaticallyImplyLeading: false,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Salto Automático',
+              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(width: 8),
+            Switch(
+              key: _keyAutoJumpToggle,
+              value: _isAutoJumpEnabled,
+              activeColor: Colors.blue,
+              onChanged: isAutoJumpStepActive
+                  ? (value) {
+                      setState(() => _isAutoJumpEnabled = value);
+                      _nextStep();
+                    }
+                  : null,
+            ),
+          ],
+        ),
+      ),
+      body: Stack(
+        children: [
+          // ✅ Quando for joystick: VLibras atrás
+          if (_stepFicaNaDireita(currentStepKey))
+            Align(
+              alignment: alignment,
+              child: const Padding(
+                padding: EdgeInsets.all(8),
+                child: ExcludeSemantics(child: VLibrasWidget()),
               ),
-              const SizedBox(width: 8),
-              Switch(
-                key: _keyAutoJumpToggle,
-                value: _isAutoJumpEnabled,
-                activeColor: Colors.blue,
-                onChanged: isAutoJumpStepActive
-                    ? (value) {
-                        setState(() => _isAutoJumpEnabled = value);
-                        _nextStep();
-                      }
-                    : null,
+            ),
+
+          Column(
+            children: [
+              Expanded(
+                child: PracticalTutorialUI(
+                  keyPalitoV: _keyPalitoV,
+                  keyPalitoH: _keyPalitoH,
+                  keyPalitoDD: _keyPalitoDD,
+                  keyPalitoDE: _keyPalitoDE,
+                  keyJumpUp: _keyJumpUp,
+                  keyJumpDown: _keyJumpDown,
+                  keyJumpLeft: _keyJumpLeft,
+                  keyJumpRight: _keyJumpRight,
+                  keyAutoJumpToggle: _keyAutoJumpToggle,
+                  isAutoJumpEnabled: _isAutoJumpEnabled,
+                  currentPhase: _currentPhase,
+                  activeStepKey: currentStepKey,
+                  onPalitoVTapped: () =>
+                      _addPalito('palito_v', 'Palito Vertical'),
+                  onPalitoHTapped: () =>
+                      _addPalito('palito_h', 'Palito Horizontal'),
+                  onPalitoDDTapped: () =>
+                      _addPalito('palito_dd', 'Palito Diagonal a Direita'),
+                  onPalitoDETapped: () =>
+                      _addPalito('palito_de', 'Palito diagonal a Esquerda'),
+                  onJumpUp: () => _onAction(_characterController.moveUp),
+                  onJumpDown: () => _onAction(_characterController.moveDown),
+                  onJumpLeft: () => _onAction(_characterController.moveLeft),
+                  onJumpRight: () => _onAction(_characterController.moveRight),
+                  onAutoJumpToggled: (value) {
+                    setState(() => _isAutoJumpEnabled = value);
+                    final currentSteps = _currentPhase == TutorialPhase.autoJump
+                        ? _autoJumpTutorialSteps
+                        : [];
+                    if (currentSteps.isNotEmpty &&
+                        currentSteps[_currentStepIndex].targetKey ==
+                            _keyAutoJumpToggle) {
+                      _nextStep();
+                    }
+                  },
+                ),
               ),
             ],
           ),
-        ),
-       body: Stack(
-  children: [
-    // ✅ Quando for joystick: VLibras atrás
-    if (_stepFicaNaDireita(currentStepKey))
-      Align(
-        alignment: alignment,
-        child: const Padding(
-          padding: EdgeInsets.all(8),
-          child: ExcludeSemantics(child: VLibrasWidget()),
-        ),
+
+          // ✅ Quando NÃO for joystick: VLibras por cima (padrão)
+          if (!_stepFicaNaDireita(currentStepKey))
+            Align(
+              alignment: alignment,
+              child: const Padding(
+                padding: EdgeInsets.all(8),
+                child: ExcludeSemantics(child: VLibrasWidget()),
+              ),
+            ),
+        ],
       ),
-
-    Column(
-      children: [
-        Expanded(
-          child: PracticalTutorialUI(
-            keyPalitoV: _keyPalitoV,
-            keyPalitoH: _keyPalitoH,
-            keyPalitoDD: _keyPalitoDD,
-            keyPalitoDE: _keyPalitoDE,
-            keyJumpUp: _keyJumpUp,
-            keyJumpDown: _keyJumpDown,
-            keyJumpLeft: _keyJumpLeft,
-            keyJumpRight: _keyJumpRight,
-            keyAutoJumpToggle: _keyAutoJumpToggle,
-            isAutoJumpEnabled: _isAutoJumpEnabled,
-            currentPhase: _currentPhase,
-            activeStepKey: currentStepKey,
-            onPalitoVTapped: () => _addPalito('Palito V', 'Palito Vertical'),
-            onPalitoHTapped: () => _addPalito('Palito H', 'Palito Horizontal'),
-            onPalitoDDTapped: () => _addPalito('Palito DD', 'Palito Diagonal a Direita'),
-            onPalitoDETapped: () => _addPalito('Palito DE', 'Palito diagonal a Esquerda'),
-            onJumpUp: () => _onAction(_characterController.moveUp),
-            onJumpDown: () => _onAction(_characterController.moveDown),
-            onJumpLeft: () => _onAction(_characterController.moveLeft),
-            onJumpRight: () => _onAction(_characterController.moveRight),
-            onAutoJumpToggled: (value) {
-              setState(() => _isAutoJumpEnabled = value);
-              final currentSteps = _currentPhase == TutorialPhase.autoJump
-                  ? _autoJumpTutorialSteps
-                  : [];
-              if (currentSteps.isNotEmpty &&
-                  currentSteps[_currentStepIndex].targetKey == _keyAutoJumpToggle) {
-                _nextStep();
-              }
-            },
-          ),
-        ),
-      ],
-    ),
-
-    // ✅ Quando NÃO for joystick: VLibras por cima (padrão)
-    if (!_stepFicaNaDireita(currentStepKey))
-      Align(
-        alignment: alignment,
-        child: const Padding(
-          padding: EdgeInsets.all(8),
-          child: ExcludeSemantics(child: VLibrasWidget()),
-        ),
-      ),
-  ],
-),
-
-        );
+    );
   }
 }
 

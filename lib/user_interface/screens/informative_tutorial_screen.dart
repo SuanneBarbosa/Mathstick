@@ -108,12 +108,10 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
         getInstruction: (_) =>
             'Para mover o personagem use os ícones de salto, chamado de Joystick.',
       ),
-      
 
       // 2. PRÁTICA MANUAL
       InfoStep(
-        getInstruction: (_) =>
-            'Vamos praticar desenhando um quadrado!',
+        getInstruction: (_) => 'Vamos praticar desenhando um quadrado!',
         onStepEnter: _resetContext,
       ),
       InfoStep(
@@ -129,7 +127,8 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
       InfoStep(
         targetKey: _keyJumpRight,
         isActionStep: true,
-        getInstruction: (_) => 'Agora mova o personagem clicando no ícone Saltar Para Direita.',
+        getInstruction: (_) =>
+            'Agora mova o personagem clicando no ícone Saltar Para Direita.',
       ),
       InfoStep(
         targetKey: _keyPalitoV,
@@ -139,66 +138,72 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
       InfoStep(
         targetKey: _keyJumpUp,
         isActionStep: true,
-        getInstruction: (_) => 'Agora, mova o personagem no botao Saltar Para cima.',
+        getInstruction: (_) =>
+            'Agora, mova o personagem no botao Saltar Para cima.',
       ),
       InfoStep(
         targetKey: _keyJumpLeft,
         isActionStep: true,
-        getInstruction: (_) => 'Mova o personagem no ícone Saltar Para Esquerda.',
+        getInstruction: (_) =>
+            'Mova o personagem no ícone Saltar Para Esquerda.',
       ),
       InfoStep(
         targetKey: _keyPalitoH,
         isActionStep: true,
-        getInstruction: (_) => 'Para fechar o quadrado, adicione um Palito Horizontal.',
+        getInstruction: (_) =>
+            'Para fechar o quadrado, adicione um Palito Horizontal.',
       ),
       InfoStep(
         targetKey: _keyAutoJumpToggle,
         getInstruction: (_) =>
             'Na parte superior central da tela está o ícone de "Salto Automático". Quando ativado, sempre que um novo palito for adicionado, o personagem saltará automaticamente para a próxima posição',
-         onStepEnter: _resetContext,
-     
+        onStepEnter: _resetContext,
       ),
       InfoStep(
         targetKey: _keyAutoJumpToggle,
         isActionStep: true,
         getInstruction: (_) => 'Agora, ative Salto Automático para testá-lo.',
-       
       ),
       InfoStep(
         targetKey: _keyPalitoH,
         isActionStep: true,
-        getInstruction: (_) => 'Adicione um Palito Horizontal. O personagem saltará sozinho!',
+        getInstruction: (_) =>
+            'Adicione um Palito Horizontal. O personagem saltará sozinho!',
       ),
       InfoStep(
         targetKey: _keyPalitoV,
         isActionStep: true,
-        getInstruction: (_) => 'Ele deu um salto para a direita! Agora adicione um Palito Vertical.',
+        getInstruction: (_) =>
+            'Ele deu um salto para a direita! Agora adicione um Palito Vertical.',
       ),
       InfoStep(
         targetKey: _keyJumpLeft,
         isActionStep: true,
-        getInstruction: (_) => 'Mova o personagem no ícone Saltar Para Esquerda.',
+        getInstruction: (_) =>
+            'Mova o personagem no ícone Saltar Para Esquerda.',
       ),
       InfoStep(
         targetKey: _keyJumpDown,
         isActionStep: true,
-        getInstruction: (_) => 'Agora, mova o personagem no ícone Saltar Para Baixo.',
+        getInstruction: (_) =>
+            'Agora, mova o personagem no ícone Saltar Para Baixo.',
       ),
       InfoStep(
         targetKey: _keyPalitoV,
         isActionStep: true,
-        getInstruction: (_) => 'Adicione outro Palito Vertical e ele também saltará para cima.',
+        getInstruction: (_) =>
+            'Adicione outro Palito Vertical e ele também saltará para cima.',
       ),
       InfoStep(
         targetKey: _keyPalitoH,
         isActionStep: true,
-        getInstruction: (_) => 'Para finalizar o exercício, adicione um Palito Horizontal.',
+        getInstruction: (_) =>
+            'Para finalizar o exercício, adicione um Palito Horizontal.',
       ),
 
       // 4. FINALIZAÇÃO
       InfoStep(
-        getInstruction: (_) =>
-            'Tutorial Finalizado!',
+        getInstruction: (_) => 'Tutorial Finalizado!',
       ),
     ];
   }
@@ -209,7 +214,7 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
     return key == _keyJumpUp ||
         key == _keyJumpDown ||
         key == _keyJumpLeft ||
-        key == _keyJumpRight || 
+        key == _keyJumpRight ||
         key == _keyJoystick;
   }
 
@@ -219,7 +224,7 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
       if (_currentStepIndex < _tutorialSteps.length - 1) {
         // 1. Remove o highlight antigo imediatamente para não ficar "fantasma"
         _removeHighlight();
-        
+
         setState(() {
           _currentStepIndex++;
           final nextStep = _tutorialSteps[_currentStepIndex];
@@ -238,7 +243,7 @@ class _InformativeTutorialScreenState extends State<InformativeTutorialScreen> {
     });
   }
 
-void _showHighlight() {
+  void _showHighlight() {
     _removeHighlight();
     if (_currentStepIndex >= _tutorialSteps.length) return;
 
@@ -248,7 +253,7 @@ void _showHighlight() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       VLibrasWidget.buscarTraducao(baseInstruction);
     });
-    
+
     if (step.targetKey != null && step.targetKey!.currentContext == null) {
       Future.delayed(const Duration(milliseconds: 50), () {
         if (mounted) _showHighlight();
@@ -259,15 +264,18 @@ void _showHighlight() {
     _overlayEntry = OverlayEntry(
       builder: (context) {
         final screenSize = MediaQuery.of(context).size;
-        
+
         final double fontSize = (screenSize.width * 0.025).clamp(16.0, 24.0);
         final double btnFontSize = (screenSize.width * 0.022).clamp(16.0, 24.0);
-        
+
         Rect highlightRect = Rect.zero;
         if (step.targetKey?.currentContext != null) {
-          final renderBox = step.targetKey!.currentContext!.findRenderObject() as RenderBox;
+          final renderBox =
+              step.targetKey!.currentContext!.findRenderObject() as RenderBox;
           final offset = renderBox.localToGlobal(Offset.zero);
-          highlightRect = Rect.fromLTWH(offset.dx, offset.dy, renderBox.size.width, renderBox.size.height).inflate(8.0);
+          highlightRect = Rect.fromLTWH(offset.dx, offset.dy,
+                  renderBox.size.width, renderBox.size.height)
+              .inflate(8.0);
         }
 
         final bool isLastStep = _currentStepIndex == _tutorialSteps.length - 1;
@@ -275,13 +283,14 @@ void _showHighlight() {
         if (isLastStep) {
           semanticLabel = '$baseInstruction. Clique no botão concluir.';
         } else if (!step.isActionStep) {
-          semanticLabel = '$baseInstruction. Clique no botão avançar para continuar.';
+          semanticLabel =
+              '$baseInstruction. Clique no botão avançar para continuar.';
         }
 
         return Material(
           type: MaterialType.transparency,
           child: Stack(
-            children:[
+            children: [
               if (step.targetKey != null)
                 Positioned.fromRect(
                   rect: highlightRect,
@@ -289,120 +298,136 @@ void _showHighlight() {
                     ignoring: true,
                     child: Container(
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.yellowAccent, width: 4),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow:[
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.5), blurRadius: 10)
-                        ]
-                      ),
+                          border:
+                              Border.all(color: Colors.yellowAccent, width: 4),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                blurRadius: 10)
+                          ]),
                     ),
                   ),
                 ),
-              
+
               if (step.customHighlight != null)
                 IgnorePointer(ignoring: true, child: step.customHighlight!),
 
               // CAIXA DE TEXTO COM TAMANHO AJUSTÁVEL E POSIÇÃO INTELIGENTE
-              Builder(
-                builder: (ctx) {
-                  Alignment boxAlignment;
-                  EdgeInsets boxMargin;
+              Builder(builder: (ctx) {
+                Alignment boxAlignment;
+                EdgeInsets boxMargin;
 
-                  // Lógica de posição
-                  if (isLastStep) {
-                    // SE FOR A ÚLTIMA TELA (TUTORIAL COMPLETO), FICA NO CENTRO ABSOLUTO
-                    boxAlignment = Alignment.center;
-                    boxMargin = EdgeInsets.zero;
-                  } else if (step.targetKey == _keyPalitoButtons || 
-                      step.targetKey == _keyPalitoV || 
-                      step.targetKey == _keyPalitoDD || 
-                      step.targetKey == _keyPalitoDE || 
-                      step.targetKey == _keyPalitoH) {
-                    boxAlignment = Alignment.topCenter;
-                    boxMargin = const EdgeInsets.only(top: 20.0);
-                  } else if (step.targetKey == _keyAutoJumpToggle) {
-                    boxAlignment = Alignment.bottomLeft;
-                    boxMargin = const EdgeInsets.only(left: 20.0, bottom: 20.0);
-                  } else {
-                    boxAlignment = Alignment.topLeft;
-                    boxMargin = const EdgeInsets.only(left: 20.0, top: 20.0);
-                  }
+                // Lógica de posição
+                if (isLastStep) {
+                  // SE FOR A ÚLTIMA TELA (TUTORIAL COMPLETO), FICA NO CENTRO ABSOLUTO
+                  boxAlignment = Alignment.center;
+                  boxMargin = EdgeInsets.zero;
+                } else if (step.targetKey == _keyPalitoButtons ||
+                    step.targetKey == _keyPalitoV ||
+                    step.targetKey == _keyPalitoDD ||
+                    step.targetKey == _keyPalitoDE ||
+                    step.targetKey == _keyPalitoH) {
+                  boxAlignment = Alignment.topCenter;
+                  boxMargin = const EdgeInsets.only(top: 20.0);
+                } else if (step.targetKey == _keyAutoJumpToggle) {
+                  boxAlignment = Alignment.bottomLeft;
+                  boxMargin = const EdgeInsets.only(left: 20.0, bottom: 20.0);
+                } else {
+                  boxAlignment = Alignment.topLeft;
+                  boxMargin = const EdgeInsets.only(left: 20.0, top: 20.0);
+                }
 
-                  return Positioned.fill(
-                    child: Align(
-                      alignment: boxAlignment,
-                      child: Padding(
-                        padding: boxMargin,
-                        child: Container(
-                          constraints: BoxConstraints(maxWidth: screenSize.width * 0.55),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.85),
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow:[
-                              BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 10, spreadRadius: 2)
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min, 
-                            children:[
-                              Focus(
-                                focusNode: _instructionFocusNode,
-                                child: Semantics(
-                                  liveRegion: true,
-                                  label: semanticLabel,
-                                  child: ExcludeSemantics(
-                                    child: Text(
-                                      baseInstruction,
-                                      style: TextStyle(
-                                        color: Colors.blueAccent, 
-                                        fontSize: fontSize,
-                                        fontWeight: FontWeight.bold,
-                                        decoration: TextDecoration.none,
-                                      ),
-                                      textAlign: TextAlign.justify,
+                return Positioned.fill(
+                  child: Align(
+                    alignment: boxAlignment,
+                    child: Padding(
+                      padding: boxMargin,
+                      child: Container(
+                        constraints:
+                            BoxConstraints(maxWidth: screenSize.width * 0.55),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.85),
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 10,
+                                spreadRadius: 2)
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Focus(
+                              focusNode: _instructionFocusNode,
+                              child: Semantics(
+                                liveRegion: true,
+                                label: semanticLabel,
+                                child: ExcludeSemantics(
+                                  child: Text(
+                                    baseInstruction,
+                                    style: TextStyle(
+                                      color: Colors.blueAccent,
+                                      fontSize: fontSize,
+                                      fontWeight: FontWeight.bold,
+                                      decoration: TextDecoration.none,
                                     ),
+                                    textAlign: TextAlign.justify,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 16),
-                              // USO DE WRAP PARA GARANTIR CENTRALIZAÇÃO DOS BOTÕES
-                              Wrap(
-                                alignment: WrapAlignment.center,
-                                spacing: 16.0, // Espaço entre os botões
-                                runSpacing: 8.0,
-                                children:[
-                                  if (!isLastStep)
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.redAccent.withValues(alpha: 0.9),
-                                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                      ),
-                                      onPressed: _finishTutorial,
-                                      child: Text(
-                                        'Pular Tutorial',
-                                        style: TextStyle(fontSize: btnFontSize * 0.8, fontWeight: FontWeight.bold, color: Colors.white),
-                                      ),
+                            ),
+                            const SizedBox(height: 16),
+                            // USO DE WRAP PARA GARANTIR CENTRALIZAÇÃO DOS BOTÕES
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              spacing: 16.0, // Espaço entre os botões
+                              runSpacing: 8.0,
+                              children: [
+                                if (!isLastStep)
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.redAccent
+                                          .withValues(alpha: 0.9),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 12),
                                     ),
-                                  if (!step.isActionStep)
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                        textStyle: TextStyle(fontSize: btnFontSize, fontWeight: FontWeight.bold),
-                                      ),
-                                      onPressed: isLastStep ? _finishTutorial : _nextStep,
-                                      child: Text(isLastStep ? 'Concluir' : 'Avançar'),
+                                    onPressed: _finishTutorial,
+                                    child: Text(
+                                      'Pular Tutorial',
+                                      style: TextStyle(
+                                          fontSize: btnFontSize * 0.8,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
                                     ),
-                                ],
-                              )
-                            ],
-                          ),
+                                  ),
+                                if (!step.isActionStep)
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 24, vertical: 12),
+                                      textStyle: TextStyle(
+                                          fontSize: btnFontSize,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    onPressed: isLastStep
+                                        ? _finishTutorial
+                                        : _nextStep,
+                                    child: Text(
+                                        isLastStep ? 'Concluir' : 'Avançar'),
+                                  ),
+                              ],
+                            )
+                          ],
                         ),
                       ),
                     ),
-                  );
-                }
-              ),
+                  ),
+                );
+              }),
             ],
           ),
         );
@@ -417,7 +442,6 @@ void _showHighlight() {
     });
   }
 
-
   void _removeHighlight() {
     _overlayEntry?.remove();
     _overlayEntry = null;
@@ -429,7 +453,7 @@ void _showHighlight() {
     await _tutorialService.completePracticalTutorial();
 
     if (!mounted) return;
-    
+
     Provider.of<PalitoController>(context, listen: false).clearPalitos();
     Provider.of<CharacterController>(context, listen: false).resetPosition();
 
@@ -448,39 +472,46 @@ void _showHighlight() {
 
   // --- Callbacks de Ação ---
   void _onPalitoVTapped() {
-    _addPalito('Palito V', 'Palito Vertical');
+    _addPalito('palito_v', 'Palito Vertical');
     _handleAction(_keyPalitoV);
   }
+
   void _onPalitoDDTapped() {
-    _addPalito('Palito DD', 'Palito Diagonal à Direita');
+    _addPalito('palito_dd', 'Palito Diagonal à Direita');
     _handleAction(_keyPalitoDD);
   }
+
   void _onPalitoDETapped() {
-    _addPalito('Palito DE', 'Palito Diagonal à Esquerda');
+    _addPalito('palito_de', 'Palito Diagonal à Esquerda');
     _handleAction(_keyPalitoDE);
   }
+
   void _onPalitoHTapped() {
-    _addPalito('Palito H', 'Palito Horizontal');
+    _addPalito('palito_h', 'Palito Horizontal');
     _handleAction(_keyPalitoH);
   }
 
   void _addPalito(String type, String label) {
-    final characterCtrl = Provider.of<CharacterController>(context, listen: false);
+    final characterCtrl =
+        Provider.of<CharacterController>(context, listen: false);
     final palitoCtrl = Provider.of<PalitoController>(context, listen: false);
-    
+
     final pos = palitoCtrl.getPositionForNewPalito(
-        type, 
-        Offset(characterCtrl.xPosition, characterCtrl.yPosition), 
-        characterCtrl.characterSize
-    );
-    
+        type,
+        Offset(characterCtrl.xPosition, characterCtrl.yPosition),
+        characterCtrl.characterSize);
+
     palitoCtrl.addPalito(pos, type, label, characterCtrl.characterSize);
 
     if (_isAutoJumpEnabled) {
-       switch (type) {
-        case 'Palito V': characterCtrl.moveUp(); break;
-        case 'Palito H': 
-        case 'Palito DD': characterCtrl.moveRight(); break;
+      switch (type) {
+        case 'palito_v':
+          characterCtrl.moveUp();
+          break;
+        case 'palito_h':
+        case 'palito_dd':
+          characterCtrl.moveRight();
+          break;
       }
     }
   }
@@ -494,18 +525,19 @@ void _showHighlight() {
 
   @override
   Widget build(BuildContext context) {
-    
     // 1. Qual o passo atual?
-    final GlobalKey? currentStepKey = (_tutorialSteps.isNotEmpty && _currentStepIndex < _tutorialSteps.length)
-        ? _tutorialSteps[_currentStepIndex].targetKey
-        : null;
-        
-    final bool isAutoJumpActionStep = (_tutorialSteps.isNotEmpty && _currentStepIndex < _tutorialSteps.length) &&
+    final GlobalKey? currentStepKey =
+        (_tutorialSteps.isNotEmpty && _currentStepIndex < _tutorialSteps.length)
+            ? _tutorialSteps[_currentStepIndex].targetKey
+            : null;
+
+    final bool isAutoJumpActionStep = (_tutorialSteps.isNotEmpty &&
+            _currentStepIndex < _tutorialSteps.length) &&
         _tutorialSteps[_currentStepIndex].isActionStep &&
         _tutorialSteps[_currentStepIndex].targetKey == _keyAutoJumpToggle;
 
-     //final bool isAutoJumpEnabledInThisStep = isAutoJumpActionStep; 
-    
+    //final bool isAutoJumpEnabledInThisStep = isAutoJumpActionStep;
+
     // 2. Decide se o joystick deve estar na ESQUERDA com base no passo atual
     final bool moveJoystickLeft = _shouldMoveJoystickToLeft(currentStepKey);
 
@@ -527,21 +559,21 @@ void _showHighlight() {
               ),
             ),
             const SizedBox(width: 8),
-                Switch(
-  key: _keyAutoJumpToggle,
-  value: _isAutoJumpEnabled,
-  activeColor: Colors.blue,
+            Switch(
+              key: _keyAutoJumpToggle,
+              value: _isAutoJumpEnabled,
+              activeColor: Colors.blue,
 
-  // ✅ Só fica clicável no passo: "Agora, ative Salto Automático para testá-lo."
-  onChanged: isAutoJumpActionStep
-      ? (value) {
-          setState(() => _isAutoJumpEnabled = value);
+              // ✅ Só fica clicável no passo: "Agora, ative Salto Automático para testá-lo."
+              onChanged: isAutoJumpActionStep
+                  ? (value) {
+                      setState(() => _isAutoJumpEnabled = value);
 
-          // como é um passo de ação, avançar ao interagir
-          _handleAction(_keyAutoJumpToggle);
-        }
-      : null, // 🔒 desabilita no passo informativo
-),
+                      // como é um passo de ação, avançar ao interagir
+                      _handleAction(_keyAutoJumpToggle);
+                    }
+                  : null, // 🔒 desabilita no passo informativo
+            ),
           ],
         ),
       ),
@@ -570,28 +602,32 @@ void _showHighlight() {
                   // Aqui passamos a configuração que move o joystick
                   isJoystickLeft: moveJoystickLeft,
                   onAutoJumpToggled: (value) {
-                      if (!isAutoJumpActionStep) return;
-                     setState(() => _isAutoJumpEnabled = value);
-                     _handleAction(_keyAutoJumpToggle);
+                    if (!isAutoJumpActionStep) return;
+                    setState(() => _isAutoJumpEnabled = value);
+                    _handleAction(_keyAutoJumpToggle);
                   },
                   onPalitoVTapped: _onPalitoVTapped,
                   onPalitoDDTapped: _onPalitoDDTapped,
                   onPalitoDETapped: _onPalitoDETapped,
                   onPalitoHTapped: _onPalitoHTapped,
                   onJumpUp: () {
-                    Provider.of<CharacterController>(context, listen: false).moveUp();
+                    Provider.of<CharacterController>(context, listen: false)
+                        .moveUp();
                     _handleAction(_keyJumpUp);
                   },
                   onJumpDown: () {
-                    Provider.of<CharacterController>(context, listen: false).moveDown();
+                    Provider.of<CharacterController>(context, listen: false)
+                        .moveDown();
                     _handleAction(_keyJumpDown);
                   },
                   onJumpLeft: () {
-                    Provider.of<CharacterController>(context, listen: false).moveLeft();
+                    Provider.of<CharacterController>(context, listen: false)
+                        .moveLeft();
                     _handleAction(_keyJumpLeft);
                   },
                   onJumpRight: () {
-                    Provider.of<CharacterController>(context, listen: false).moveRight();
+                    Provider.of<CharacterController>(context, listen: false)
+                        .moveRight();
                     _handleAction(_keyJumpRight);
                   },
                 ),
@@ -601,10 +637,10 @@ void _showHighlight() {
 
           // VLibras sempre visível e fixo na direita (pois o joystick sairá da frente dele)
           const Positioned(
-  bottom: 0,
-  right: 0,
-  child: ExcludeSemantics(child: VLibrasWidget()),
-),
+            bottom: 0,
+            right: 0,
+            child: ExcludeSemantics(child: VLibrasWidget()),
+          ),
         ],
       ),
     );

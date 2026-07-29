@@ -109,7 +109,7 @@ class PracticalTutorialUI extends StatelessWidget {
             children: [
               MenuButton(
                 key: keyPalitoV,
-                iconPath: 'assets/images/Palito V.png',
+                iconPath: 'assets/images/palito_v.png',
                 label: "Palito V",
                 tooltip: "Palito Vertical",
                 semanticsLabel: "Adicionar Palito Vertical",
@@ -118,7 +118,7 @@ class PracticalTutorialUI extends StatelessWidget {
               ),
               MenuButton(
                 key: keyPalitoDD,
-                iconPath: 'assets/images/Palito DD.png',
+                iconPath: 'assets/images/palito_dd.png',
                 label: 'Palito DD',
                 tooltip: 'Palito Diagonal à Direita',
                 semanticsLabel: ' Adicionar Palito Diagonal à Direita',
@@ -126,7 +126,7 @@ class PracticalTutorialUI extends StatelessWidget {
               ),
               MenuButton(
                 key: keyPalitoDE,
-                iconPath: 'assets/images/Palito DE.png',
+                iconPath: 'assets/images/palito_de.png',
                 label: 'Palito DE',
                 tooltip: 'Palito Diagonal à Esquerda',
                 semanticsLabel: 'Adicionar Palito Diagonal à Esquerda',
@@ -135,7 +135,7 @@ class PracticalTutorialUI extends StatelessWidget {
               const SizedBox(height: 8),
               MenuButton(
                 key: keyPalitoH,
-                iconPath: 'assets/images/Palito H.png',
+                iconPath: 'assets/images/palito_h.png',
                 label: "Palito H",
                 tooltip: "Palito Horizontal",
                 semanticsLabel: "Adicionar Palito Horizontal",
